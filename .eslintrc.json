@@ -83,15 +83,6 @@
         "generator-star-spacing": "error",
         "grouped-accessor-pairs": "error",
         "guard-for-in": "error",
-        "i18next/no-literal-string": [
-            "error",
-            {
-                "validateTemplate": true,
-                "ignoreCallee": [
-                    "console.*"
-                ]
-            }
-        ],
         "id-denylist": "error",
         "id-length": [
             "error",

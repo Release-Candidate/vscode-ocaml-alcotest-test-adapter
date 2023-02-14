@@ -17,6 +17,12 @@
         "Testing"
     ],
     "icon": "./images/alcotest-logo.png",
+    "capabilities": {
+        "untrustedWorkspaces": {
+            "supported": false,
+            "description": "Do not run tests in an untrusted workspace because they can execute arbitrary code!"
+        }
+    },
     "activationEvents": [
         "onLanguage:ocaml",
         "onLanguage:dune",
@@ -46,6 +52,18 @@
     "pricing": "Free",
     "engines": {
         "vscode": "^1.59.0-20210722"
+    },
+    "contributes": {
+        "configuration": {
+            "title": "Alcotest Test Adapter",
+            "properties": {
+                "alcotest.testDir": {
+                    "type": "string",
+                    "default": "test",
+                    "description": "Directory containing the test sources."
+                }
+            }
+        }
     },
     "devDependencies": {
         "@types/node": "^18.13.0",
