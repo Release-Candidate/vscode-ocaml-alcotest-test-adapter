@@ -1,0 +1,67 @@
+{
+    "name": "vscode-ocaml-alcotest-test-adapter",
+    "displayName": "OCaml Alcotest Test Explorer",
+    "version": "0.0.1",
+    "publisher": "release-candidate",
+    "description": "Support for OCaml Alcotest and Alcotest inline tests.",
+    "keywords": [
+        "OCaml",
+        "Alcotest",
+        "Test",
+        "Testing",
+        "Test Explorer"
+    ],
+    "markdown": "github",
+    "qna": "marketplace",
+    "categories": [
+        "Testing"
+    ],
+    "icon": "./images/alcotest-logo.png",
+    "activationEvents": [
+        "onLanguage:ocaml",
+        "onLanguage:dune",
+        "onLanguage:dune-project",
+        "onLanguage:dune-workspace",
+        "workspaceContains:**/dune-workspace",
+        "workspaceContains:**/dune",
+        "workspaceContains:**/dune-project",
+        "workspaceContains:**/*.opam",
+        "workspaceContains:**/*.ml",
+        "workspaceContains:**/*.mli",
+        "workspaceContains:**/*.mll",
+        "workspaceContains:**/*.mly",
+        "workspaceContains:**/*.re",
+        "workspaceContains:**/*.rei"
+    ],
+    "main": "./out/extension",
+    "license": "SEE LICENSE IN LICENSE",
+    "bugs": {
+        "url": "https://github.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter.git"
+    },
+    "homepage": "https://github.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter/blob/main/README.md",
+    "pricing": "Free",
+    "engines": {
+        "vscode": "^1.59.0-20210722"
+    },
+    "devDependencies": {
+        "@types/node": "^18.13.0",
+        "@types/vscode": "^1.75.1",
+        "@typescript-eslint/eslint-plugin": "^5.52.0",
+        "@typescript-eslint/parser": "^5.52.0",
+        "@vscode/vsce": "^2.17.0",
+        "esbuild": "^0.17.8",
+        "eslint": "^8.34.0",
+        "eslint-plugin-chai-friendly": "^0.7.2",
+        "eslint-plugin-mocha": "^10.1.0",
+        "typescript": "^4.9.5"
+    },
+    "dependencies": {},
+    "vsce": {
+        "dependencies": true,
+        "yarn": true
+    }
+}

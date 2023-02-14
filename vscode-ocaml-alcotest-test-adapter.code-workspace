@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"cSpell.words": [
+			"Alcotest",
+			"Alcotests",
+			"opam"
+		]
+	}
+}
