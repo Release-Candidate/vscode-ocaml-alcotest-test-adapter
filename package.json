@@ -16,7 +16,7 @@
     "categories": [
         "Testing"
     ],
-    "icon": "./images/alcotest-logo.png",
+    "icon": "images/alcotest-logo.png",
     "capabilities": {
         "untrustedWorkspaces": {
             "supported": false,
@@ -57,20 +57,27 @@
         "configuration": {
             "title": "Alcotest Test Adapter",
             "properties": {
-                "alcotest.testDir": {
-                    "type": "string",
-                    "default": "test",
-                    "description": "Directory containing the test sources."
+                "alcotest.testDirectories": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": [
+                        "test",
+                        "tests"
+                    ],
+                    "markdownDescription": "Directories to search for test sources."
                 }
             }
         }
     },
     "devDependencies": {
         "@types/node": "^18.13.0",
-        "@types/vscode": "^1.75.1",
+        "@types/vscode": "1.59.0",
         "@typescript-eslint/eslint-plugin": "^5.52.0",
         "@typescript-eslint/parser": "^5.52.0",
         "@vscode/vsce": "^2.17.0",
+        "del-cli": "^5.0.0",
         "esbuild": "^0.17.8",
         "eslint": "^8.34.0",
         "eslint-plugin-chai-friendly": "^0.7.2",
@@ -81,5 +88,16 @@
     "vsce": {
         "dependencies": true,
         "yarn": true
+    },
+    "scripts": {
+        "clean": "del-cli -- out",
+        "compile": "tsc -p ./",
+        "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
+        "esbuild": "yarn --ignore-engines run esbuild-base --sourcemap",
+        "esbuild-watch": "yarn --ignore-engines run esbuild-base --sourcemap --watch",
+        "bundle": "yarn --ignore-engines run esbuild-base --minify",
+        "vscode:prepublish": "yarn --ignore-engines run bundle",
+        "package": "vsce package",
+        "publish": "vsce publish"
     }
 }

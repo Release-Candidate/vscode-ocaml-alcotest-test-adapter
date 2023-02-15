@@ -14,3 +14,11 @@ This extension lets you run OCaml [Alcotests](<https://github.com/mirage/alcotes
 ## Changes
 
 See file [CHANGELOG.md](CHANGELOG.md).
+
+## Contributing
+
+See file [CONTRIBUTING.md](CONTRIBUTING.md)
+
+## License
+
+OCaml Alcotest Test Explorer for Visual Studio Code is licensed under MIT license. See file [LICENSE](LICENSE)

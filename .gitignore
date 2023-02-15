@@ -1,0 +1,6 @@
+node_modules/
+out/
+.DS_Store
+alcotest_*.txt
+yarn-error.log
+vscode-ocaml-alcotest-test-adapter-*.vsix
