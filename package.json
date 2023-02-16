@@ -66,7 +66,7 @@
                         "test",
                         "tests"
                     ],
-                    "markdownDescription": "Directories to search for test sources."
+                    "markdownDescription": "Directories to search for test sources. Must be relative paths."
                 }
             }
         }

@@ -12,15 +12,9 @@
  * https://code.visualstudio.com/api/extension-guides/testing.
  */
 
+import * as c from "./constants";
+import * as t from "./tests";
 import * as vscode from "vscode";
-import {
-    configurationSection,
-    configurationTestDir,
-    outputChannelName,
-    runProfileLabel,
-    testControllerID,
-    testControllerLabel,
-} from "./constants";
 
 /**
  * Called when the extension is being activated.
@@ -31,28 +25,34 @@ import {
  * @param _context The `vscode.ExtensionContext` to use.
  */
 // eslint-disable-next-line no-unused-vars
-export function activate(context: vscode.ExtensionContext) {
-    const outChannel = vscode.window.createOutputChannel(outputChannelName);
+export async function activate(context: vscode.ExtensionContext) {
+    const outChannel = vscode.window.createOutputChannel(c.outputChannelName);
     outChannel.appendLine("OCaml Alcotest Test Adapter starting.");
-    const config = vscode.workspace.getConfiguration(configurationSection);
+
+    /*
+     * If no workspace exists (that includes an opened folder), we can't do
+     * anything sensible anyway.
+     */
+    if (!vscode.workspace.workspaceFolders) {
+        outChannel.appendLine("Not in a workspace/no folder opened. Exiting.");
+        return;
+    }
+
+    const config = vscode.workspace.getConfiguration(c.cfgSection);
 
     const controller = vscode.tests.createTestController(
-        testControllerID,
-        testControllerLabel
+        c.testControllerID,
+        c.testControllerLabel
     );
     context.subscriptions.push(controller);
 
     controller.createRunProfile(
-        runProfileLabel,
+        c.runProfileLabel,
         vscode.TestRunProfileKind.Run,
-        (r, t) => runHandler({ controller, outChannel, config }, r, t),
-        true
+        (r, tok) => runHandler({ config, controller, outChannel }, r, tok)
     );
-    const testDirs = config.get<string[]>(configurationTestDir) || [
-        "test",
-        "tests",
-    ];
-    outChannel.appendLine("Test dirs: " + testDirs);
+
+    await t.addTests({ config, controller, outChannel });
 }
 
 /**
@@ -63,7 +63,7 @@ export function activate(context: vscode.ExtensionContext) {
  * @param token The `CancellationToken`. Whether the user want's to cancel the
  * test runs.
  */
-function runHandler(
+async function runHandler(
     env: {
         config: vscode.WorkspaceConfiguration;
         controller: vscode.TestController;
@@ -75,57 +75,13 @@ function runHandler(
     env.outChannel.appendLine("Hi");
     const run = env.controller.createTestRun(request);
 
-    const queue = testQueue(request, env.controller);
+    const tests = t.testList(request, env.controller);
 
     if (!token.isCancellationRequested) {
-        const test = queue.pop();
+        const test = tests.pop();
         env.outChannel.appendLine("Running test " + test?.label);
     }
-    env.outChannel.appendLine(
-        "Test dirs: " + env.config.get(configurationTestDir)
-    );
+    env.outChannel.appendLine("Test dirs: " + c.getCfgTestDirs(env.config));
 
     run.end();
-}
-
-/**
- * Return a queue of tests to run.
- *
- * Either all tests of the `controller` are run or only the ones specified in
- * `request`.
- * @param request The request which may hold a list of tests (`TestItem`s) to
- * run.
- * @param controller Holding all existing `TestItem`s.
- * @returns The Queue of tests to run.
- */
-function testQueue(
-    request: vscode.TestRunRequest,
-    controller: vscode.TestController
-) {
-    const queue: vscode.TestItem[] = [];
-
-    /**
-     * Return a list of a test and its children, if it has any.
-     * @param t The test to check for children.
-     * @returns A list of a test and its children.
-     */
-    function allChildren(t: vscode.TestItem) {
-        const testList: vscode.TestItem[] = [];
-        // eslint-disable-next-line no-magic-numbers
-        if (t.children?.size > 0) {
-            t.children.forEach((c) => testList.push(c));
-            // TODO: fill empty suites, t.children.size === 0
-        } else {
-            testList.push(t);
-        }
-        return testList;
-    }
-
-    if (request.include) {
-        request.include.forEach((t) => queue.push(...allChildren(t)));
-    } else {
-        controller.items.forEach((t) => queue.push(...allChildren(t)));
-    }
-
-    return queue.filter((t) => !request.exclude?.includes(t));
 }

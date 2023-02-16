@@ -10,6 +10,8 @@
  * All constants used somewhere in the extension.
  */
 
+import * as vscode from "vscode";
+
 /**
  * The `id` parameter of `createTestController`.
  * Shall be a globally unique ID.
@@ -40,9 +42,24 @@ export const runProfileLabel = "Run test";
 /**
  * The name of the configuration section of the extension.
  */
-export const configurationSection = "alcotest";
+export const cfgSection = "alcotest";
 
 /**
  * The paths to the (possible) test directories.
  */
-export const configurationTestDir = "testDirectories";
+export const cfgTestDir = "testDirectories";
+
+/**
+ * Default value for `configurationTestDir`.
+ */
+export const cfgDefaultTestDir = ["test", "tests"];
+
+/**
+ * Return the configuration value for `testDirectories`.
+ *
+ * @param config The configuration object to use.
+ * @returns The configuration value for `testDirectories`.
+ */
+export function getCfgTestDirs(config: vscode.WorkspaceConfiguration) {
+    return config.get<string[]>(cfgTestDir) || cfgDefaultTestDir;
+}
