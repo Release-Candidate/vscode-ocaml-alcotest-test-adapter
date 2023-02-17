@@ -14,7 +14,6 @@ import * as h from "./extension_helpers";
 import * as io from "./osInteraction";
 import * as vscode from "vscode";
 
-// eslint-disable-next-line max-statements
 export async function addTests(env: {
     config: vscode.WorkspaceConfiguration;
     controller: vscode.TestController;
@@ -34,18 +33,6 @@ export async function addTests(env: {
         );
         env.outChannel.appendLine(`Found dune files: ${uris}`);
     }
-    const out = await io.runCommand("ls", ["-l", "./"]);
-    env.outChannel.appendLine(
-        `out: ${out.stdout} stderr: ${out.stderr} err: ${out.error}`
-    );
-    const out2 = await io.runCommand("ls", ["-l", "./hugo"]);
-    env.outChannel.appendLine(
-        `out: ${out2.stdout} stderr: ${out2.stderr} err: ${out2.error}`
-    );
-    const out3 = await io.runCommand("hugo", ["-l", "./"]);
-    env.outChannel.appendLine(
-        `out: ${out3.stdout} stderr: ${out3.stderr} err: ${out3.error}`
-    );
 }
 
 /**

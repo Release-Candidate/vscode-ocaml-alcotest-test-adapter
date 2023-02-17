@@ -1,24 +1,24 @@
 {
-	"folders": [
-		{
-			"path": "."
-		}
-	],
-	"settings": {
-		"cSpell.words": [
-			"Alcotest",
-			"Alcotests",
-			"backreference",
-			"camelcase",
-			"iife",
-			"linebreak",
-			"nonblock",
-			"nonoctal",
-			"opam",
-			"outfile",
-			"paren",
-			"plusplus",
-			"VSIX"
-		]
-	}
+    "folders": [
+        {
+            "path": "."
+        }
+    ],
+    "settings": {
+        "cSpell.words": [
+            "Alcotest",
+            "Alcotests",
+            "backreference",
+            "camelcase",
+            "iife",
+            "linebreak",
+            "nonblock",
+            "nonoctal",
+            "opam",
+            "outfile",
+            "paren",
+            "plusplus",
+            "VSIX"
+        ]
+    }
 }

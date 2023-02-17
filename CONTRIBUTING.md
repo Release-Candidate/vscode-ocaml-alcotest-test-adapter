@@ -21,6 +21,7 @@ All yarn commands add `--ignore-engines` to not get a spurious warning:
 
 - `yarn --ignore-engines clean` - deletes the directory `./out`
 - `yarn --ignore-engines compile` - compiles the Typescript sources to `./out/` and generates the source maps
+- `yarn --ignore-engines test` - compiles the extension and runs the tests
 - `yarn --ignore-engines esbuild` - compiles the Typescript sources and bundles them to `./out/extension.js` and adds a source map `./out/extension.js.map`. This is used for testing.
 - `yarn --ignore-engines esbuild-watch` - runs the same commands as `yarn --ignore-engines esbuild-watch` in watch mode, that is, it re-bundles everything if a file has been changed
 - `yarn --ignore-engines bundle` - compiles and minifies the Typescript sources and bundles them to `./out/extension.js`, no source maps are generated. This is used for releases.

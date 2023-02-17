@@ -54,6 +54,11 @@
             "problemMatcher": [],
             "label": "yarn: publish"
         },
-
+        {
+            "type": "yarn",
+            "task": "test",
+            "problemMatcher": [],
+            "label": "yarn: test"
+        }
     ]
 }

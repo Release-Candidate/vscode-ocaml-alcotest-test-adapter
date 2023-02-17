@@ -69,7 +69,7 @@ export async function filterExistingDirs(
     }
 
     // eslint-disable-next-line no-unused-vars
-    return statsAndPaths.filter(([f, _]) => filterDirs(f)).map(([_, d]) => d);
+    return statsAndPaths.filter(([f]) => filterDirs(f)).map(([_, d]) => d);
 }
 
 /**

@@ -6,11 +6,15 @@
 		"outDir": "out",
 		"sourceMap": true,
 		"strict": true,
-		"rootDir": "src",
+		"rootDir": ".",
         "moduleResolution": "node",
         "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true,
         "noUnusedParameters": true
 	},
+	"include": [
+        "src/**/*.ts",
+        "test/**/*.ts"
+    ],
 	"exclude": ["node_modules", ".vscode-test"]
 }

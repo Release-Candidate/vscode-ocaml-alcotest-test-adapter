@@ -18,7 +18,6 @@ import * as vscode from "vscode";
  * @returns The list ('or' an empty list `[]`) of currently opened workspace
  * folders.
  */
-
 export function workspaceFolders() {
     return vscode.workspace.workspaceFolders || [];
 }
