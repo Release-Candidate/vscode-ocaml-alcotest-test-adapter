@@ -16,6 +16,8 @@ import * as c from "./constants";
 import * as t from "./tests";
 import * as vscode from "vscode";
 
+// TODO: workspace.onDidChangeWorkspaceFolders
+
 /**
  * Called when the extension is being activated.
  * That is, the registered `Activation Event` has happened. The
@@ -72,16 +74,18 @@ async function runHandler(
     request: vscode.TestRunRequest,
     token: vscode.CancellationToken
 ) {
-    env.outChannel.appendLine("Hi");
     const run = env.controller.createTestRun(request);
 
     const tests = t.testList(request, env.controller);
 
-    if (!token.isCancellationRequested) {
-        const test = tests.pop();
-        env.outChannel.appendLine("Running test " + test?.label);
-    }
-    env.outChannel.appendLine("Test dirs: " + c.getCfgTestDirs(env.config));
-
+    tests.forEach((test) => {
+        if (!token.isCancellationRequested) {
+            env.outChannel.appendLine("Running test " + test?.label);
+            if (test) {
+                run.passed(test);
+            }
+        }
+        env.outChannel.appendLine("Test dirs: " + c.getCfgTestDirs(env.config));
+    });
     run.end();
 }

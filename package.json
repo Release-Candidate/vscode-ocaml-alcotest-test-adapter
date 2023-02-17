@@ -9,7 +9,8 @@
         "Alcotest",
         "Test",
         "Testing",
-        "Test Explorer"
+        "Test Explorer",
+        "multi-root ready"
     ],
     "markdown": "github",
     "qna": "marketplace",

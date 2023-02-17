@@ -139,7 +139,7 @@ mocha.describe("I/O Functions", () => {
     //==========================================================================
     mocha.describe("runCommand", () => {
         mocha.it("Cmd does not exist", async () => {
-            const out = await io.runCommand("does-not-exist", []);
+            const out = await io.runCommand(root, "does-not-exist", []);
             chai.assert.strictEqual(
                 out.error,
                 "spawn does-not-exist ENOENT",
@@ -157,7 +157,7 @@ mocha.describe("I/O Functions", () => {
             );
         });
         mocha.it("Run ls on non existing file", async () => {
-            const out = await io.runCommand("ls", [
+            const out = await io.runCommand(root, "ls", [
                 "-l",
                 "does_not_exist_I_hope",
             ]);
@@ -174,7 +174,7 @@ mocha.describe("I/O Functions", () => {
             );
         });
         mocha.it("Run ls on existing file LICENSE", async () => {
-            const out = await io.runCommand("ls", ["LICENSE"]);
+            const out = await io.runCommand(root, "ls", ["LICENSE"]);
             chai.assert.strictEqual(out.stdout, "LICENSE\n", "ls of LICENSE");
             chai.assert.strictEqual(out.stderr, "", "No output at stderr!");
             chai.assert.isUndefined(
@@ -184,7 +184,7 @@ mocha.describe("I/O Functions", () => {
             );
         });
         mocha.it("Output of `dune --version`", async () => {
-            const out = await io.runCommand("dune", ["--version"]);
+            const out = await io.runCommand(root, "dune", ["--version"]);
             chai.assert.isString(out.stdout, "Something like `3.6.2`");
             chai.assert.strictEqual(out.stderr, "", "No output at stderr!");
             chai.assert.isUndefined(

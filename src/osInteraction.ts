@@ -124,12 +124,17 @@ export async function findFilesRelative(
  * - If the command finished successfully, the output is returned in the field
  * `stdout`, the field `stderr` should be the empty string `""` and `error` is
  * `undefined`.
+ * @param root The current working directory for the command.
  * @param cmd The command to call.
  * @param args The arguments to pass to the command.
  * @returns An object containing the output of the command's execution.
  */
-export async function runCommand(cmd: string, args: string[]): Promise<Output> {
-    const process = child_process.spawn(cmd, args);
+export async function runCommand(
+    root: vscode.WorkspaceFolder,
+    cmd: string,
+    args: string[]
+): Promise<Output> {
+    const process = child_process.spawn(cmd, args, { cwd: root.uri.path });
 
     const checkCmd = new Promise((_, reject) => {
         process.on("error", reject);

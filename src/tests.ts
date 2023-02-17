@@ -19,19 +19,30 @@ export async function addTests(env: {
     controller: vscode.TestController;
     outChannel: vscode.OutputChannel;
 }) {
-    const testDirs = c.getCfgTestDirs(env.config);
-    const dirs = await io.filterExistingDirs(
-        h.workspaceFolders().at(0) as vscode.WorkspaceFolder,
-        testDirs
-    );
-    env.outChannel.appendLine(`Searching in directories: ${dirs}`);
     const roots = h.workspaceFolders();
-    if (roots.at(0)) {
-        const uris = await io.findFilesRelative(
-            roots.at(0) as vscode.WorkspaceFolder,
-            `${testDirs.at(0)}/*.ml`
+    for await (const root of roots) {
+        env.outChannel.appendLine(`In workspace ${root.name}`);
+        const test = env.controller.createTestItem(
+            root.name,
+            `Workspace: ${root.name}`,
+            root.uri
         );
-        env.outChannel.appendLine(`Found dune files: ${uris}`);
+        env.controller.items.add(test);
+        const inlineRunnerPaths = await io.findFilesRelative(
+            root,
+            "**/inline_test_runner_*.exe"
+        );
+        // eslint-disable-next-line no-await-in-loop
+        const out = await io.runCommand(root, "dune", [
+            "exec",
+            inlineRunnerPaths[0]?.path,
+            "--",
+            "list",
+            "--color=never",
+        ]);
+        env.outChannel.appendLine(
+            `out: ${out.stdout} stderr: ${out.stderr} err: ${out.error}`
+        );
     }
 }
 
