@@ -24,10 +24,13 @@ export function workspaceFolders() {
 }
 
 /**
- *
- * @param root
- * @param env
- * @returns
+ * Return `true`, if the dune command is working in directory `root`, `false`
+ * else.
+ * Diagnostic output is appended to `env.outChannel`.
+ * @param root The directory to use as working directory for dune.
+ * @param env The needed extension's environment, an `OutputChannel`.
+ * @returns `true`, if the dune command is working in directory `root`, `false`
+ * else.
  */
 export async function isDuneWorking(
     root: vscode.WorkspaceFolder,

@@ -206,9 +206,23 @@ export async function runDuneTests(root: vscode.WorkspaceFolder) {
 }
 
 /**
+ * Check, if dune is working, that is `dune --version` returns a version.
+ * A message suitable to be logged is returned in `error`, `stderr` or
+ * `stdout`.
  *
- * @param root
- * @returns
+ * If the dune command has not been found or is not working at all, an error
+ * message is returned in `error`.
+ * If the dune command works, but the `--version` argument printed something at
+ * stderr, `stderr` is set to a warning message, but I guess dune is working and
+ * can be used.
+ * If 'dune --version' returned a version string that could not be parsed,
+ * `stderr` is set to a message, but I guess dune is working and
+ * can be used.
+ * If 'dune --version' could be parsed, a message is returned in the field
+ * `stdout`.
+ * @param root The working directory for dune to use.
+ * @returns A message suitable to be logged is returned in `error`, `stderr` or
+ * `stdout`.
  */
 export async function checkDune(root: vscode.WorkspaceFolder): Promise<Output> {
     const {
@@ -233,7 +247,7 @@ not sure if dune is working, but using it anyway`,
         };
     }
     return {
-        stderr: `Info: ${c.duneCmd} ${duneVersion} did return something I could not parse as a version. Using ${c.duneCmd} anyway.`,
+        stderr: `Info: ${c.duneCmd} ${duneVersion} did return '${duneVersion}' which I could not parse as a version. Using ${c.duneCmd} anyway.`,
     };
 }
 

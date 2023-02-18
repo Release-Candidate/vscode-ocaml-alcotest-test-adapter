@@ -81,6 +81,11 @@ export const runnerListOpts = ["list", "--color=never"];
 export const runnerTestOpts = ["--color=never", "-c", "-e"];
 
 /**
+ * Glob pattern to find the inline Alcotest runner executable.
+ */
+export const runnerExeGlob = "**/inline_test_runner_*.exe";
+
+/**
  ******************************************************************************
  *  Configuration constants.
  */

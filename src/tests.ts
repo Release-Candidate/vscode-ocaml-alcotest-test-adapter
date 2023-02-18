@@ -9,40 +9,54 @@
  * ==============================================================================
  * Everything to add or run tests.
  */
+import * as c from "./constants";
 import * as h from "./extension_helpers";
 import * as io from "./osInteraction";
 import * as vscode from "vscode";
 
-// eslint-disable-next-line max-statements
 export async function addTests(env: {
     config: vscode.WorkspaceConfiguration;
     controller: vscode.TestController;
     outChannel: vscode.OutputChannel;
 }) {
+    env.outChannel.appendLine("Adding tests ...");
     const roots = h.workspaceFolders();
-    for await (const root of roots) {
-        env.outChannel.appendLine(`In workspace ${root.name}`);
-        // eslint-disable-next-line no-extra-parens
-        if (!(await h.isDuneWorking(root, env))) {
-            // eslint-disable-next-line no-continue
-            continue;
-        }
-        const test = env.controller.createTestItem(
-            root.name,
-            `Workspace: ${root.name}`,
-            root.uri
+
+    const promises = [];
+    for (const root of roots) {
+        env.outChannel.appendLine(`Processing workspace ${root.name}`);
+        promises.push(addWorkspaceTests(root, env));
+    }
+
+    await Promise.allSettled(promises);
+
+    env.outChannel.appendLine("Finished adding tests.");
+}
+
+async function addWorkspaceTests(
+    root: vscode.WorkspaceFolder,
+    env: {
+        config: vscode.WorkspaceConfiguration;
+        controller: vscode.TestController;
+        outChannel: vscode.OutputChannel;
+    }
+) {
+    // eslint-disable-next-line no-extra-parens
+    if (!(await h.isDuneWorking(root, env))) {
+        return;
+    }
+    const test = env.controller.createTestItem(
+        root.name,
+        `Workspace: ${root.name}`,
+        root.uri
+    );
+    env.controller.items.add(test);
+    const inlineRunnerPaths = await io.findFilesRelative(root, c.runnerExeGlob);
+    if (inlineRunnerPaths[0]) {
+        const out = await io.runRunnerListDune(root, inlineRunnerPaths[0]);
+        env.outChannel.appendLine(
+            `out: ${out.stdout} stderr: ${out.stderr} err: ${out.error}`
         );
-        env.controller.items.add(test);
-        const inlineRunnerPaths = await io.findFilesRelative(
-            root,
-            "**/inline_test_runner_*.exe"
-        );
-        if (inlineRunnerPaths[0]) {
-            const out = await io.runRunnerListDune(root, inlineRunnerPaths[0]);
-            env.outChannel.appendLine(
-                `out: ${out.stdout} stderr: ${out.stderr} err: ${out.error}`
-            );
-        }
     }
 }
 
