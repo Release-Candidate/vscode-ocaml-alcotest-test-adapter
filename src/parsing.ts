@@ -10,9 +10,21 @@
  * Parse test lists, test results, files for tests, ...
  */
 
-const versionRegex = /^[\s]*([vV]?(ersion)?\s*[\d][\d._~/-]*)[\s]*$/mu;
+/**
+ * Regexp to parse version numbers.
+ * Ignores leading and trailing whitespace including newlines.
+ * The version number is captured in the first group with name `version`.
+ */
+const versionRegex =
+    /^[\s]*[vV]?(?:ersion)?\s*(?<version>[\p{N}][\p{N}\p{P}~]*)[\s]*$/mu;
 
-const testListRegex = /^(\S+.*?)\s+(\d+)\s+(.*)$/mu;
+/**
+ * Regexp to parse Alcotest test lists.
+ * The suite name is saved in the first match group, `suite`, the ID is captured
+ * in the second group with name `id` and the test's name is the third group
+ * called `name`.
+ */
+const testListRegex = /^(?<suite>\S+.*?)\s+(?<id>\d+)\s+(?<name>.*)$/gmu;
 
 /**
  * Return `true` if the given string is a valid version string, `false` else.
@@ -34,4 +46,31 @@ export function isValidVersion(s: string | undefined) {
     }
 
     return false;
+}
+
+/**
+ * Parse the given list of Alcotest test cases and return them.
+ *
+ * Return a list of objects `{ suite, id, name }`, where `suite` is the name of
+ * the test suite, `id` is the id of the test and `name` is it's name.
+ * @param s The string to parse.
+ * @returns A list of objects `{ suite, id, name }`.
+ */
+export function parseTestList(s: string) {
+    if (!s.length) {
+        return [];
+    }
+
+    const matches = s.matchAll(testListRegex);
+
+    const parsedTests = [];
+    for (const match of matches) {
+        parsedTests.push({
+            suite: match.groups?.suite ? match.groups.suite : "",
+            id: match.groups?.id ? parseInt(match.groups.id, 10) : 0,
+            name: match.groups?.name ? match.groups.name : "",
+        });
+    }
+
+    return parsedTests;
 }

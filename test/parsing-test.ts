@@ -101,11 +101,18 @@ mocha.describe("Parsing Functions", () => {
                 "v3.6.2 should be valid"
             );
         });
-        mocha.it("Version 3.6.2~9 is valid", () => {
+        mocha.it("Version 3.6.2~9-156_78 is valid", () => {
             chai.assert.strictEqual(
-                parse.isValidVersion("Version 3.6.2~9"),
+                parse.isValidVersion("Version 3.6.2~9-156_78"),
                 true,
-                "Version 3.6.2~9 should be valid"
+                "Version 3.6.2~9-156_78 should be valid"
+            );
+        });
+        mocha.it("2023/02/18.438413 is valid", () => {
+            chai.assert.strictEqual(
+                parse.isValidVersion("Version 2023/02/18.438413"),
+                true,
+                "Version 2023/02/18.438413 should be valid"
             );
         });
         mocha.it("VerSion 3.6.2~9 is invalid", () => {
@@ -120,6 +127,57 @@ mocha.describe("Parsing Functions", () => {
                 parse.isValidVersion(" 3.6.2\t\n"),
                 true,
                 "' 3.6.2\\t\\n' should be valid"
+            );
+        });
+    });
+    //==========================================================================
+    mocha.describe("parseTestList", () => {
+        mocha.it("Empty string -> empty list", () => {
+            chai.assert.deepEqual(
+                // eslint-disable-next-line no-undefined
+                parse.parseTestList(""),
+                [],
+                "Empty string -> empty list"
+            );
+        });
+        mocha.it("No test list string -> empty list", () => {
+            chai.assert.deepEqual(
+                // eslint-disable-next-line no-undefined
+                parse.parseTestList("bfls bdsfbl bdfbs GT  dsjkafôdsafk"),
+                [],
+                "'bfls bdsfbl bdfbs GT  dsjkafôdsafk' -> empty list"
+            );
+        });
+        mocha.it("Test list string -> list of test objects", () => {
+            chai.assert.deepEqual(
+                // eslint-disable-next-line no-undefined
+                parse.parseTestList(`lib/interp_common.ml         12   parse not false.
+lib/interp_common.ml         13   parse not true.
+Small Step tests                14   let x = 0 in let x  = 22 in x.
+Small Step tests                15   let x = 22 in x.`),
+                [
+                    {
+                        id: 12,
+                        name: "parse not false.",
+                        suite: "lib/interp_common.ml",
+                    },
+                    {
+                        id: 13,
+                        name: "parse not true.",
+                        suite: "lib/interp_common.ml",
+                    },
+                    {
+                        id: 14,
+                        name: "let x = 0 in let x  = 22 in x.",
+                        suite: "Small Step tests",
+                    },
+                    {
+                        id: 15,
+                        name: "let x = 22 in x.",
+                        suite: "Small Step tests",
+                    },
+                ],
+                "Test list with IDs 12 - 15"
             );
         });
     });
