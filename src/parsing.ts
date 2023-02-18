@@ -10,14 +10,9 @@
  * Parse test lists, test results, files for tests, ...
  */
 
-/**
- * Trim leading and trailing whitespace, including newlines.
- * @param s The string to trim.
- * @returns The string `s` with leading and trailing whitespace removed.
- */
-export function trim(s: string) {
-    return s;
-}
+const versionRegex = /^[\s]*([vV]?(ersion)?\s*[\d][\d._~/-]*)[\s]*$/mu;
+
+const testListRegex = /^(\S+.*?)\s+(\d+)\s+(.*)$/mu;
 
 /**
  * Return `true` if the given string is a valid version string, `false` else.
@@ -31,10 +26,12 @@ export function isValidVersion(s: string | undefined) {
     if (!s?.length) {
         return false;
     }
-    const trimmed = trim(s);
-    if (!trimmed.length) {
-        return false;
+
+    const m = s.match(versionRegex);
+    // eslint-disable-next-line no-magic-numbers
+    if (m) {
+        return true;
     }
 
-    return true;
+    return false;
 }

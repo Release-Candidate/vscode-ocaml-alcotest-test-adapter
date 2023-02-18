@@ -25,15 +25,23 @@ mocha.describe("Parsing Functions", () => {
         mocha.it("Empty string ''", () => {
             chai.assert.strictEqual(
                 // eslint-disable-next-line no-undefined
-                parse.trim(""),
+                "".trim(),
                 "",
                 "Empty string does not change"
+            );
+        });
+        mocha.it("Just whitespace", () => {
+            chai.assert.strictEqual(
+                // eslint-disable-next-line no-undefined
+                "\n  \t \n  ".trim(),
+                "",
+                "'\\n  \\t \\n  ' -> ''"
             );
         });
         mocha.it("No whitespace", () => {
             chai.assert.strictEqual(
                 // eslint-disable-next-line no-undefined
-                parse.trim("Foobačšľ+ťíéšťr"),
+                "Foobačšľ+ťíéšťr".trim(),
                 "Foobačšľ+ťíéšťr",
                 "Without whitespace 'Foobačšľ+ťíéšťr' -> no change"
             );
@@ -41,7 +49,7 @@ mocha.describe("Parsing Functions", () => {
         mocha.it("Inner whitespace", () => {
             chai.assert.strictEqual(
                 // eslint-disable-next-line no-undefined
-                parse.trim("Fo o\tb ač\n š ľ+\nť íé š\tťr"),
+                "Fo o\tb ač\n š ľ+\nť íé š\tťr".trim(),
                 "Fo o\tb ač\n š ľ+\nť íé š\tťr",
                 "Inner whitespace 'Fo o\\tb ač\\n š ľ+\\nť íé š\\tťr' -> no change"
             );
@@ -49,7 +57,7 @@ mocha.describe("Parsing Functions", () => {
         mocha.it("Outer whitespace", () => {
             chai.assert.strictEqual(
                 // eslint-disable-next-line no-undefined
-                parse.trim("  \t \n foobar\n \t "),
+                "  \t \n foobar\n \t ".trim(),
                 "foobar",
                 "Outer whitespace should be removed '  \\t \\n foobar\\n \\t '-> 'foobar'"
             );
@@ -84,6 +92,27 @@ mocha.describe("Parsing Functions", () => {
                 parse.isValidVersion("3.6.2"),
                 true,
                 "3.6.2 should be valid"
+            );
+        });
+        mocha.it("v3.6.2 is valid", () => {
+            chai.assert.strictEqual(
+                parse.isValidVersion("v3.6.2"),
+                true,
+                "v3.6.2 should be valid"
+            );
+        });
+        mocha.it("Version 3.6.2~9 is valid", () => {
+            chai.assert.strictEqual(
+                parse.isValidVersion("Version 3.6.2~9"),
+                true,
+                "Version 3.6.2~9 should be valid"
+            );
+        });
+        mocha.it("VerSion 3.6.2~9 is invalid", () => {
+            chai.assert.strictEqual(
+                parse.isValidVersion("VerSion 3.6.2~9"),
+                false,
+                "VerSion 3.6.2~9 should be invalid"
             );
         });
         mocha.it("Ignores whitespace", () => {
