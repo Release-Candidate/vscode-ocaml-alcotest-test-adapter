@@ -9,11 +9,11 @@
  * ==============================================================================
  * Everything to add or run tests.
  */
-import * as c from "./constants";
 import * as h from "./extension_helpers";
 import * as io from "./osInteraction";
 import * as vscode from "vscode";
 
+// eslint-disable-next-line max-statements
 export async function addTests(env: {
     config: vscode.WorkspaceConfiguration;
     controller: vscode.TestController;
@@ -22,6 +22,11 @@ export async function addTests(env: {
     const roots = h.workspaceFolders();
     for await (const root of roots) {
         env.outChannel.appendLine(`In workspace ${root.name}`);
+        // eslint-disable-next-line no-extra-parens
+        if (!(await h.isDuneWorking(root, env))) {
+            // eslint-disable-next-line no-continue
+            continue;
+        }
         const test = env.controller.createTestItem(
             root.name,
             `Workspace: ${root.name}`,
@@ -32,17 +37,12 @@ export async function addTests(env: {
             root,
             "**/inline_test_runner_*.exe"
         );
-        // eslint-disable-next-line no-await-in-loop
-        const out = await io.runCommand(root, "dune", [
-            "exec",
-            inlineRunnerPaths[0]?.path,
-            "--",
-            "list",
-            "--color=never",
-        ]);
-        env.outChannel.appendLine(
-            `out: ${out.stdout} stderr: ${out.stderr} err: ${out.error}`
-        );
+        if (inlineRunnerPaths[0]) {
+            const out = await io.runRunnerListDune(root, inlineRunnerPaths[0]);
+            env.outChannel.appendLine(
+                `out: ${out.stdout} stderr: ${out.stderr} err: ${out.error}`
+            );
+        }
     }
 }
 

@@ -12,8 +12,10 @@
  */
 /* eslint-disable camelcase */
 
+import * as c from "./constants";
 import * as child_process from "child_process";
 import internal = require("stream");
+import * as parse from "./parsing";
 import * as vscode from "vscode";
 
 /**
@@ -113,17 +115,8 @@ export async function findFilesRelative(
 
 /**
  * Spawn the given command with the given arguments and return the output.
- *
- * `{ stdout; stderr; error }` is returned.
- * - If an error occurred while executing the command, the field `error` is set to
- * the message. Normally that means, that the command has not been found.
- * `stdout` and `stderr` are both `undefined`.
- * - If the command returned an error, the error message is returned in the
- * field `stderr`, the output (if any) of stdout is in the string `stdout` and
- * `error` is `undefined`.
- * - If the command finished successfully, the output is returned in the field
- * `stdout`, the field `stderr` should be the empty string `""` and `error` is
- * `undefined`.
+ * Set `root` as the working directory of the command.
+ * `{ stdout; stderr; error }` is returned, see {@link Output}.
  * @param root The current working directory for the command.
  * @param cmd The command to call.
  * @param args The arguments to pass to the command.
@@ -154,6 +147,94 @@ export async function runCommand(
         // eslint-disable-next-line no-extra-parens
         return { error: (error as Error).message };
     }
+}
+
+/**
+ * Run the given runner executable with command line arguments to list all tests
+ * using dune and return its output.
+ * Set `root` as the working directory of the command.
+ * The test list output is contained in `stdout`, `stderr` should be the empty
+ * string und `error` should be `undefined`. See {@link Output}
+ * @param root The current working directory for the dune command.
+ * @param runner The path to the runner to execute.
+ * @returns The output of the test runner in the `stdout` field.
+ */
+export async function runRunnerListDune(
+    root: vscode.WorkspaceFolder,
+    runner: vscode.Uri
+) {
+    return runCommand(root, c.duneCmd, [
+        c.duneExecArg,
+        runner.path,
+        "--",
+        ...c.runnerListOpts,
+    ]);
+}
+
+/**
+ * Run the given runner executable command line arguments to run all given tests
+ * using dune and return its output.
+ * Set `root` as the working directory of the command.
+ * `{ stdout; stderr; error }` is returned, see {@link Output}.
+ * @param root The current working directory for the dune command.
+ * @param runner The path to the runner to execute.
+ * @param tests The names of the tests to run.
+ * @returns The output of the test runner.
+ */
+export async function runRunnerTestsDune(
+    root: vscode.WorkspaceFolder,
+    runner: vscode.Uri,
+    tests: string[]
+) {
+    return runCommand(root, c.duneCmd, [
+        c.duneExecArg,
+        runner.path,
+        "--",
+        c.runnerTestArg,
+        ...tests,
+        ...c.runnerTestOpts,
+    ]);
+}
+
+/**
+ * Run all known tests using `dune test` and return its output.
+ * @param root The current working directory for the dune command.
+ * @returns The output of `dune test` called in the directory `root`.
+ */
+export async function runDuneTests(root: vscode.WorkspaceFolder) {
+    return runCommand(root, c.duneCmd, [c.duneAllTestArg]);
+}
+
+/**
+ *
+ * @param root
+ * @returns
+ */
+export async function checkDune(root: vscode.WorkspaceFolder): Promise<Output> {
+    const {
+        stdout: duneVersion,
+        stderr: duneStderr,
+        error: cmdError,
+    } = await runCommand(root, c.duneCmd, [c.duneVersionArg]);
+    if (cmdError) {
+        return {
+            error: `Error calling ${c.duneCmd} in ${root.uri.path}, can't use dune! Error message: """${cmdError}"""`,
+        };
+    }
+    if (duneStderr?.length) {
+        return {
+            stderr: `Warning: ${c.duneCmd} ${duneVersion} did return something at stderr: """${duneStderr}"""
+not sure if dune is working, but using it anyway`,
+        };
+    }
+    if (parse.isValidVersion(duneVersion)) {
+        return {
+            stdout: `Dune command ${c.duneCmd} is working in ${root.uri.path}.`,
+        };
+    }
+    return {
+        stderr: `Info: ${c.duneCmd} ${duneVersion} did return something I could not parse as a version. Using ${c.duneCmd} anyway.`,
+    };
 }
 
 /**

@@ -11,6 +11,7 @@
  * Tests for the `odInteraction` module.
  */
 
+import * as c from "../src/constants";
 import * as chai from "chai";
 import * as h from "../src/extension_helpers";
 import * as io from "../src/osInteraction";
@@ -184,7 +185,11 @@ mocha.describe("I/O Functions", () => {
             );
         });
         mocha.it("Output of `dune --version`", async () => {
-            const out = await io.runCommand(root, "dune", ["--version"]);
+            // eslint-disable-next-line array-bracket-newline
+            const out = await io.runCommand(root, c.duneCmd, [
+                c.duneVersionArg,
+                // eslint-disable-next-line array-bracket-newline
+            ]);
             chai.assert.isString(out.stdout, "Something like `3.6.2`");
             chai.assert.strictEqual(out.stderr, "", "No output at stderr!");
             chai.assert.isUndefined(

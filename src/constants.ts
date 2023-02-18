@@ -36,6 +36,52 @@ export const runProfileLabel = "Run test";
 
 /**
  ******************************************************************************
+ *  Test runner constants.
+ */
+
+/**
+ * The cmd to call `dune`.
+ */
+export const duneCmd = "dune";
+
+/**
+ * The argument to get dune's version.
+ * Used to check if dune is callable at all.
+ */
+export const duneVersionArg = "--version";
+
+/**
+ * The argument for dune to run an executable.
+ * Used to execute the test runners.
+ */
+export const duneExecArg = "exec";
+
+/**
+ * THe argument to pass to dune to run all known tests.
+ */
+export const duneAllTestArg = "test";
+
+/**
+ * The argument for the test runner to run a single test or the given list of
+ * tests.
+ */
+export const runnerTestArg = "test";
+
+/**
+ * Options to pass to the Alcotest test runner to get a list of tests without
+ * colorization escape sequences.
+ */
+export const runnerListOpts = ["list", "--color=never"];
+
+/**
+ * Options to pass to the Alcotest test runner to get run tests without
+ * colorization escape sequences, with a less verbose output and show the tests
+ * errors.
+ */
+export const runnerTestOpts = ["--color=never", "-c", "-e"];
+
+/**
+ ******************************************************************************
  *  Configuration constants.
  */
 
