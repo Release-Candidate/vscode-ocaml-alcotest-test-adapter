@@ -197,7 +197,7 @@ export async function runRunnerTestsDune(
 }
 
 /**
- * Run all known tests using `dune test` and return its output.
+ * Run all known tests using `dune runtest` and return its output.
  * @param root The current working directory for the dune command.
  * @returns The output of `dune test` called in the directory `root`.
  */
@@ -243,7 +243,7 @@ not sure if dune is working, but using it anyway`,
     }
     if (parse.isValidVersion(duneVersion)) {
         return {
-            stdout: `Dune command ${c.duneCmd} is working in ${root.uri.path}.`,
+            stdout: `Dune command "${c.duneCmd}" is working in ${root.uri.path}.`,
         };
     }
     return {

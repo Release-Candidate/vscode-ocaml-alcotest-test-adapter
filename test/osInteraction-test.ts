@@ -191,6 +191,7 @@ mocha.describe("I/O Functions", () => {
                 // eslint-disable-next-line array-bracket-newline
             ]);
             chai.assert.isString(out.stdout, "Something like `3.6.2`");
+            chai.assert.isNotEmpty(out.stdout, "Something like `3.6.2`");
             chai.assert.strictEqual(out.stderr, "", "No output at stderr!");
             chai.assert.isUndefined(
                 out.error,

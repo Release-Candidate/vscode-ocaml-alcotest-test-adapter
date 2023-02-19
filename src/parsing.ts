@@ -20,11 +20,20 @@ const versionRegex =
 
 /**
  * Regexp to parse Alcotest test lists.
- * The suite name is saved in the first match group, `suite`, the ID is captured
+ * The test group's name is saved in the first match group, `group`, the ID is captured
  * in the second group with name `id` and the test's name is the third group
  * called `name`.
  */
-const testListRegex = /^(?<suite>\S+.*?)\s+(?<id>\d+)\s+(?<name>.*)$/gmu;
+const testListRegex = /^(?<group>\S+.*?)\s+(?<id>\d+)\s+(?<name>.*)\.$/gmu;
+
+/**
+ * Regexp to parse Alcotest test results for errors.
+ * The test group's name is saved in the first match group, `group`, the ID is captured
+ * in the second group with name `id` and the test's name is the third group
+ * called `name`.
+ */
+const testErrorRegex =
+    /^│\s+\[FAIL\]\s+(?<group>\S+.*?)\s+(?<id>\d+)\s+(?<name>.*)\.\s+│$/gmu;
 
 /**
  * Return `true` if the given string is a valid version string, `false` else.
@@ -51,26 +60,96 @@ export function isValidVersion(s: string | undefined) {
 /**
  * Parse the given list of Alcotest test cases and return them.
  *
- * Return a list of objects `{ suite, id, name }`, where `suite` is the name of
- * the test suite, `id` is the id of the test and `name` is it's name.
- * @param s The string to parse.
+ * Return a list of objects `{ group, id, name }`, where `group` is the name of
+ * the test group the test is in, `id` is the id of the test and `name` is it's
+ * name.
  * @returns A list of objects `{ suite, id, name }`.
  */
 export function parseTestList(s: string) {
+    return groupTestHelper(parseTestHelper(testListRegex, s));
+}
+
+/**
+ * Parse the given list of Alcotest test results and return the tests with
+ * errors.
+ *
+ * Return a list of objects `{ group, id, name }`, where `group` is the name of
+ * the test group the test is in, `id` is the id of the test and `name` is it's
+ * name.
+ * @param s The string to parse.
+ * @returns A list of objects `{ suite, id, name }`.
+ */
+export function parseTestErrors(s: string) {
+    return groupTestHelper(parseTestHelper(testErrorRegex, s));
+}
+
+/**
+ * Parse the given string `s`  using regexp `r` and return the results as a
+ * list.
+ * The regexp `r` shall define matching groups with names `group`, `id` and
+ * `name`.
+ * Return a list of test objects `{ group, id, name }` sorted by group name.
+ * @param r The regexp to use to parse ethe string `s`. Shall define matching
+ * groups with names `group`, `id` and `name`.
+ * @param s The string to parse.
+ * @returns A list of test objects `{ group, id, name }` sorted by `group`.
+ */
+function parseTestHelper(r: RegExp, s: string) {
     if (!s.length) {
         return [];
     }
 
-    const matches = s.matchAll(testListRegex);
+    const matches = s.matchAll(r);
 
     const parsedTests = [];
     for (const match of matches) {
         parsedTests.push({
-            suite: match.groups?.suite ? match.groups.suite : "",
+            group: match.groups?.group ? match.groups.group : "",
             id: match.groups?.id ? parseInt(match.groups.id, 10) : 0,
             name: match.groups?.name ? match.groups.name : "",
         });
     }
 
+    if (parsedTests.length) {
+        parsedTests.sort(({ group: groupId1 }, { group: groupId2 }) =>
+            groupId1.localeCompare(groupId2)
+        );
+    }
+
     return parsedTests;
+}
+
+/**
+ * Group the list of tests by field `group` and return a list of groups
+ * containing lists of tests.
+ * Require: `tests` is sorted by group name.
+ * @param tests The list of tests to precess.
+ * @returns A list of groups containing tests.
+ */
+function groupTestHelper(
+    tests: {
+        group: string;
+        id: number;
+        name: string;
+    }[]
+) {
+    if (!tests.length) {
+        return [];
+    }
+
+    let currGroup = {
+        name: tests[0].group,
+        tests: [] as { id: number; name: string }[],
+    };
+    const groups = [currGroup];
+
+    for (const test of tests) {
+        if (test.group === currGroup.name) {
+            currGroup.tests.push({ id: test.id, name: test.name });
+        } else {
+            currGroup = { name: test.group, tests: [] };
+            groups.push(currGroup);
+        }
+    }
+    return groups;
 }

@@ -35,9 +35,19 @@ export const outputChannelName = "Alcotest Tests";
 export const runProfileLabel = "Run test";
 
 /**
+ * The label of root of the inline test tree in the Test Explorer view.
+ */
+export const inlineTestsLabel = "Inline Tests (PPX)";
+
+/**
  ******************************************************************************
  *  Test runner constants.
  */
+
+/**
+ * Path of the build sandbox directory to ignore when searching for executables.
+ */
+export const sandboxDir = "/_build/.sandbox";
 
 /**
  * The cmd to call `dune`.
@@ -57,9 +67,9 @@ export const duneVersionArg = "--version";
 export const duneExecArg = "exec";
 
 /**
- * THe argument to pass to dune to run all known tests.
+ * The argument to pass to dune to run all known tests.
  */
-export const duneAllTestArg = "test";
+export const duneAllTestArg = "runtest";
 
 /**
  * The argument for the test runner to run a single test or the given list of

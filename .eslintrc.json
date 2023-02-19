@@ -76,10 +76,7 @@
             "error",
             "declaration"
         ],
-        "function-paren-newline": [
-            "error",
-            "consistent"
-        ],
+        "function-paren-newline": "off",
         "generator-star-spacing": "error",
         "grouped-accessor-pairs": "error",
         "guard-for-in": "error",

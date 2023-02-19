@@ -14,6 +14,8 @@
 import * as chai from "chai";
 import * as mocha from "mocha";
 import * as parse from "../src/parsing";
+import * as testErrors from "./fixtures/test_errors";
+import * as testLists from "./fixtures/test_lists";
 
 /**
  * *****************************************************************************
@@ -151,33 +153,63 @@ mocha.describe("Parsing Functions", () => {
         mocha.it("Test list string -> list of test objects", () => {
             chai.assert.deepEqual(
                 // eslint-disable-next-line no-undefined
-                parse.parseTestList(`lib/interp_common.ml         12   parse not false.
-lib/interp_common.ml         13   parse not true.
-Small Step tests                14   let x = 0 in let x  = 22 in x.
-Small Step tests                15   let x = 22 in x.`),
-                [
-                    {
-                        id: 12,
-                        name: "parse not false.",
-                        suite: "lib/interp_common.ml",
-                    },
-                    {
-                        id: 13,
-                        name: "parse not true.",
-                        suite: "lib/interp_common.ml",
-                    },
-                    {
-                        id: 14,
-                        name: "let x = 0 in let x  = 22 in x.",
-                        suite: "Small Step tests",
-                    },
-                    {
-                        id: 15,
-                        name: "let x = 22 in x.",
-                        suite: "Small Step tests",
-                    },
-                ],
-                "Test list with IDs 12 - 15"
+                parse.parseTestList(testLists.normalList),
+                testLists.normalListObject,
+                "Test list 'normalList'"
+            );
+        });
+        mocha.it(
+            "String of list of inline tests -> list of test objects",
+            () => {
+                chai.assert.deepEqual(
+                    // eslint-disable-next-line no-undefined
+                    parse.parseTestList(testLists.inlineList),
+                    testLists.inlineListObject,
+                    "Test list 'inlineList'"
+                );
+            }
+        );
+    });
+    //==========================================================================
+    mocha.describe("parseTestErrors", () => {
+        mocha.it("Empty string -> empty list", () => {
+            chai.assert.deepEqual(
+                // eslint-disable-next-line no-undefined
+                parse.parseTestErrors(""),
+                [],
+                "Empty string -> empty list"
+            );
+        });
+        mocha.it("No test list string -> empty list", () => {
+            chai.assert.deepEqual(
+                // eslint-disable-next-line no-undefined
+                parse.parseTestErrors("bfls bdsfbl bdfbs GT  dsjkafôdsafk"),
+                [],
+                "'bfls bdsfbl bdfbs GT  dsjkafôdsafk' -> empty list"
+            );
+        });
+        mocha.it("Test error string -> list of test objects", () => {
+            chai.assert.deepEqual(
+                // eslint-disable-next-line no-undefined
+                parse.parseTestErrors(testErrors.oneError),
+                testErrors.oneErrorObject,
+                "Test error 'oneError'"
+            );
+        });
+        mocha.it("Test two errors string -> list of test objects", () => {
+            chai.assert.deepEqual(
+                // eslint-disable-next-line no-undefined
+                parse.parseTestErrors(testErrors.twoErrors),
+                testErrors.twoErrorsObject,
+                "Test error 'twoErrors'"
+            );
+        });
+        mocha.it("Inline test error string -> list of test objects", () => {
+            chai.assert.deepEqual(
+                // eslint-disable-next-line no-undefined
+                parse.parseTestErrors(testErrors.oneErrorInline),
+                testErrors.oneErrorInlineObject,
+                "Test error 'oneErrorInline'"
             );
         });
     });

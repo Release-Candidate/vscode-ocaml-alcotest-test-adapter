@@ -13,6 +13,8 @@
  */
 
 import * as c from "./constants";
+import * as io from "./osInteraction";
+import * as p from "./parsing";
 import * as t from "./tests";
 import * as vscode from "vscode";
 
@@ -26,7 +28,7 @@ import * as vscode from "vscode";
  *
  * @param _context The `vscode.ExtensionContext` to use.
  */
-// eslint-disable-next-line no-unused-vars
+// eslint-disable-next-line max-statements
 export async function activate(context: vscode.ExtensionContext) {
     const outChannel = vscode.window.createOutputChannel(c.outputChannelName);
     outChannel.appendLine("OCaml Alcotest Test Adapter starting.");
@@ -39,6 +41,7 @@ export async function activate(context: vscode.ExtensionContext) {
         outChannel.appendLine("Not in a workspace/no folder opened. Exiting.");
         return;
     }
+    const testData: t.TestData = new WeakMap();
 
     const config = vscode.workspace.getConfiguration(c.cfgSection);
 
@@ -51,10 +54,14 @@ export async function activate(context: vscode.ExtensionContext) {
     controller.createRunProfile(
         c.runProfileLabel,
         vscode.TestRunProfileKind.Run,
-        (r, tok) => runHandler({ config, controller, outChannel }, r, tok)
+        (r, tok) =>
+            runHandler({ config, controller, outChannel, testData }, r, tok)
     );
 
-    await t.addTests({ config, controller, outChannel });
+    await t.addTests({ config, controller, outChannel, testData });
+
+    controller.resolveHandler = async () =>
+        t.addTests({ config, controller, outChannel, testData });
 }
 
 /**
@@ -70,22 +77,85 @@ async function runHandler(
         config: vscode.WorkspaceConfiguration;
         controller: vscode.TestController;
         outChannel: vscode.OutputChannel;
+        testData: t.TestData;
     },
     request: vscode.TestRunRequest,
     token: vscode.CancellationToken
 ) {
     const run = env.controller.createTestRun(request);
-
     const tests = t.testList(request, env.controller);
 
-    tests.forEach((test) => {
+    for await (const test of tests) {
         if (!token.isCancellationRequested) {
-            env.outChannel.appendLine("Running test " + test?.label);
-            if (test) {
-                run.passed(test);
-            }
+            const passEnv = {
+                config: env.config,
+                controller: env.controller,
+                outChannel: env.outChannel,
+                run,
+                testData: env.testData,
+            };
+            passEnv.run = run;
+            await runSingleTest(passEnv, test);
         }
-        env.outChannel.appendLine("Test dirs: " + c.getCfgTestDirs(env.config));
-    });
+    }
     run.end();
+}
+
+async function runSingleTest(
+    env: {
+        config: vscode.WorkspaceConfiguration;
+        controller: vscode.TestController;
+        outChannel: vscode.OutputChannel;
+        testData: t.TestData;
+        run: vscode.TestRun;
+    },
+    test: vscode.TestItem
+) {
+    env.outChannel.appendLine(
+        `Running test "${test.parent ? test.parent.label : ""}   ${
+            test.id
+        }    ${test?.label}"`
+    );
+    const ret = env.testData.get(test);
+    if (ret) {
+        const { root, runner } = ret;
+        const startTime = Date.now();
+        test.busy = true;
+        const out = await io.runRunnerTestsDune(root, runner, [
+            `${test.parent?.label}`,
+            `${test.id}`,
+        ]);
+        await parseTestResult(env, { out, startTime, test });
+        // eslint-disable-next-line require-atomic-updates
+        test.busy = false;
+        env.run.appendOutput(`${out.stdout?.replace(/\n/gu, "\r\n")}`);
+    }
+}
+
+async function parseTestResult(
+    env: {
+        config: vscode.WorkspaceConfiguration;
+        controller: vscode.TestController;
+        outChannel: vscode.OutputChannel;
+        testData: t.TestData;
+        run: vscode.TestRun;
+    },
+    data: {
+        out: io.Output;
+        startTime: number;
+        test: vscode.TestItem;
+    }
+) {
+    env.outChannel.appendLine(`Test output:\n${data.out.stdout}`);
+    const [errList] = p.parseTestErrors(data.out.stdout as string);
+    // eslint-disable-next-line max-depth
+    if (errList?.tests.find((e) => `${e.id}` === data.test.id)) {
+        env.run.failed(
+            data.test,
+            new vscode.TestMessage(data.out.stdout as string),
+            Date.now() - data.startTime
+        );
+    } else {
+        env.run.passed(data.test, Date.now() - data.startTime);
+    }
 }
