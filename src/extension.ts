@@ -13,6 +13,7 @@
  */
 
 import * as c from "./constants";
+import * as helpers from "./extension_helpers";
 import * as io from "./osInteraction";
 import * as p from "./parsing";
 import * as t from "./tests";
@@ -98,6 +99,7 @@ async function runHandler(
             await runSingleTest(passEnv, test);
         }
     }
+
     run.end();
 }
 
@@ -121,6 +123,7 @@ async function runSingleTest(
         const { root, runner } = ret;
         const startTime = Date.now();
         test.busy = true;
+
         const out = await io.runRunnerTestsDune(root, runner, [
             `${test.parent?.label}`,
             `${test.id}`,
@@ -132,6 +135,11 @@ async function runSingleTest(
     }
 }
 
+/**
+ * Parse a test
+ * @param env
+ * @param data
+ */
 async function parseTestResult(
     env: {
         config: vscode.WorkspaceConfiguration;
@@ -148,14 +156,54 @@ async function parseTestResult(
 ) {
     env.outChannel.appendLine(`Test output:\n${data.out.stdout}`);
     const [errList] = p.parseTestErrors(data.out.stdout as string);
-    // eslint-disable-next-line max-depth
-    if (errList?.tests.find((e) => `${e.id}` === data.test.id)) {
-        env.run.failed(
-            data.test,
-            new vscode.TestMessage(data.out.stdout as string),
-            Date.now() - data.startTime
+    const errElem = errList?.tests.find((e) => `${e.id}` === data.test.id);
+    if (errElem) {
+        let message = await constructMessage(
+            {
+                out: data.out,
+                startTime: data.startTime,
+                test: data.test,
+                testData: env.testData,
+            },
+            errElem
         );
+        env.run.failed(data.test, message, Date.now() - data.startTime);
     } else {
         env.run.passed(data.test, Date.now() - data.startTime);
     }
+}
+
+/**
+ * Return a `TestMessage` object filled with the information of the failed
+ * test.
+ * @param data The needed data.
+ * @param errElem The test object of the test that failed.
+ * @returns A `TestMessage` object filled with the information of the failed
+ * test.
+ */
+async function constructMessage(
+    data: {
+        out: io.Output;
+        startTime: number;
+        test: vscode.TestItem;
+        testData: t.TestData;
+    },
+    errElem: p.TestType
+) {
+    let message = new vscode.TestMessage(
+        data.out.stdout ? data.out.stdout : ""
+    );
+    if (data.test.uri) {
+        const textData = await vscode.workspace.fs.readFile(data.test.uri);
+        const ret = data.testData.get(data.test);
+        const regexPref = ret?.isInline ? c.inlineTestPrefix + '"' : '"';
+        const loc = helpers.getPosition(
+            regexPref + p.escapeRegex(data.test.label) + '"',
+            textData.toString()
+        );
+        message.location = new vscode.Location(data.test.uri, loc);
+    }
+    message.actualOutput = errElem.actual;
+    message.expectedOutput = errElem.expected;
+    return message;
 }

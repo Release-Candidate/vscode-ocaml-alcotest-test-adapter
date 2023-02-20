@@ -103,36 +103,16 @@ mocha.describe("I/O Functions", () => {
             );
         });
         mocha.it("Exactly one file exists", async () => {
-            const [{ path: result }] = await io.findFilesRelative(
-                root,
-                "**/parsing.ts"
-            );
-            const { path: should } = vscode.Uri.joinPath(
-                root.uri,
-                "src/parsing.ts"
-            );
+            const [result] = await io.findFilesRelative(root, "**/parsing.ts");
+            const should = "src/parsing.ts";
             chai.assert.strictEqual(result, should, "parsing.ts exists");
         });
         mocha.it("Many .md files exist", async () => {
             const result = await io.findFilesRelative(root, "*.md");
-            const should = [
-                vscode.Uri.joinPath(root.uri, "CONTRIBUTING.md"),
-                vscode.Uri.joinPath(root.uri, "README.md"),
-                vscode.Uri.joinPath(root.uri, "CHANGELOG.md"),
-            ];
+            const should = ["CONTRIBUTING.md", "README.md", "CHANGELOG.md"];
             chai.assert.deepEqual(
-                result
-                    .map((e) => {
-                        const { path } = e;
-                        return path;
-                    })
-                    .sort(),
-                should
-                    .map((e) => {
-                        const { path } = e;
-                        return path;
-                    })
-                    .sort(),
+                result.sort(),
+                should.sort(),
                 "CONTRIBUTING.md, CHANGELOG.md and README.md exist"
             );
         });

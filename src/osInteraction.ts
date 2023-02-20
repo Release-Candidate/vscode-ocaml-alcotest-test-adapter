@@ -92,6 +92,37 @@ export async function existsIsFile(uri: vscode.Uri) {
     }
 }
 
+// eslint-disable-next-line max-statements
+export async function findSourceToTest(
+    root: vscode.WorkspaceFolder,
+    testDirs: string[],
+    groupName: string
+) {
+    const option1 = await findFilesRelative(root, groupName);
+    if (option1.length > 0) {
+        return vscode.Uri.joinPath(root.uri, option1[0]);
+    }
+
+    for await (const path of testDirs) {
+        const option2 = await findFilesRelative(
+            root,
+            path + "/" + c.testSourceGlob
+        );
+        for await (const opt of option2) {
+            const textData = await vscode.workspace.fs.readFile(
+                vscode.Uri.joinPath(root.uri, opt)
+            );
+            const fileText = textData.toString();
+
+            if (fileText.includes(groupName)) {
+                return vscode.Uri.joinPath(root.uri, opt);
+            }
+        }
+    }
+
+    return vscode.Uri.file("");
+}
+
 /**
  * Return a list of files matching the pattern `glob` in the directory `root`.
  * If no file matching the pattern has been found or an error occurred, the
@@ -107,7 +138,7 @@ export async function findFilesRelative(
     try {
         const pattern = new vscode.RelativePattern(root, glob);
         const uris = await vscode.workspace.findFiles(pattern);
-        return uris;
+        return uris.map((u) => vscode.workspace.asRelativePath(u, false));
     } catch (error) {
         return [];
     }
@@ -161,11 +192,11 @@ export async function runCommand(
  */
 export async function runRunnerListDune(
     root: vscode.WorkspaceFolder,
-    runner: vscode.Uri
+    runner: string
 ) {
     return runCommand(root, c.duneCmd, [
         c.duneExecArg,
-        runner.path,
+        runner,
         "--",
         ...c.runnerListOpts,
     ]);
@@ -183,12 +214,12 @@ export async function runRunnerListDune(
  */
 export async function runRunnerTestsDune(
     root: vscode.WorkspaceFolder,
-    runner: vscode.Uri,
+    runner: string,
     tests: string[]
 ) {
     return runCommand(root, c.duneCmd, [
         c.duneExecArg,
-        runner.path,
+        runner,
         "--",
         c.runnerTestArg,
         ...tests,

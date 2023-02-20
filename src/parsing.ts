@@ -11,6 +11,11 @@
  */
 
 /**
+ * Regexp to escape special regexp characters in strings.
+ */
+const regexpRegex = /[\\^$.*+?()[\]{}|-]/gu;
+
+/**
  * Regexp to parse version numbers.
  * Ignores leading and trailing whitespace including newlines.
  * The version number is captured in the first group with name `version`.
@@ -31,9 +36,31 @@ const testListRegex = /^(?<group>\S+.*?)\s+(?<id>\d+)\s+(?<name>.*)\.$/gmu;
  * The test group's name is saved in the first match group, `group`, the ID is captured
  * in the second group with name `id` and the test's name is the third group
  * called `name`.
+ * The expected value is returned in the fourth match group, called `exp`, the
+ * actual value is returned in the fifth group, `rec`.
  */
 const testErrorRegex =
-    /^│\s+\[FAIL\]\s+(?<group>\S+.*?)\s+(?<id>\d+)\s+(?<name>.*)\.\s+│$/gmu;
+    /^│\s+\[FAIL\]\s+(?<group>\S+.*?)\s+(?<id>\d+)\s+(?<name>.*?)\.\s+│$.*?^\s+Expected:\s+`(?<exp>.*?)'\s*\n+\s+\s+Received:\s+`(?<rec>.*?)'\s*\n\n/gmsu;
+
+/**
+ * Regexp to parse Alcotest test results for errors.
+ * The test group's name is saved in the first match group, `group`, the ID is captured
+ * in the second group with name `id` and the test's name is the third group
+ * called `name`.
+ * The exception call stack is returned in the fourth match group, called
+ * `excp`.
+ */
+const testExceptionRegex =
+    /^│\s+\[FAIL\]\s+(?<group>\S+.*?)\s+(?<id>\d+)\s+(?<name>.*?)\.\s+│$.*?^(?=\[exception\]\s+(?<excp>.*?)\n\n)/gmsu;
+
+/**
+ * Escape special regexp characters in `s`.
+ * @param s The string in which to escape special characters
+ * @returns The string `s` with all special characters escaped.
+ */
+export function escapeRegex(s: string) {
+    return s.replace(regexpRegex, "\\$&");
+}
 
 /**
  * Return `true` if the given string is a valid version string, `false` else.
@@ -58,43 +85,79 @@ export function isValidVersion(s: string | undefined) {
 }
 
 /**
+ * Return the first position of `s` in `text`, as line number and column number.
+ *
+ * @param s The string to search for.
+ * @param text The text to search the string in.
+ * @returns The first position of `s` in `text`, as line number and column number.
+ */
+export function getLineAndCol(s: string, text: string) {
+    const lines = text.split("\n");
+    let lineNum = 0;
+    for (const line of lines) {
+        const index = line.search(s);
+        if (index >= 0) {
+            return { line: lineNum, col: index };
+        }
+        // eslint-disable-next-line no-magic-numbers
+        lineNum += 1;
+    }
+
+    return { line: 0, col: 0 };
+}
+
+/**
  * Parse the given list of Alcotest test cases and return them.
  *
- * Return a list of objects `{ group, id, name }`, where `group` is the name of
- * the test group the test is in, `id` is the id of the test and `name` is it's
- * name.
- * @returns A list of objects `{ suite, id, name }`.
+ * Return a list of objects `{ name: group, tests: [{ id, name }] }`, where
+ * `group` is the name of the test group the test is in, `id` is the id of the
+ * test and `name` is it's name.
+ * @returns A list of objects `{ name: group, tests: [{ id, name }] }`.
  */
 export function parseTestList(s: string) {
-    return groupTestHelper(parseTestHelper(testListRegex, s));
+    return groupTestHelper(
+        parseTestHelper(testListRegex, s, listMatchToObject)
+    );
 }
 
 /**
  * Parse the given list of Alcotest test results and return the tests with
  * errors.
  *
- * Return a list of objects `{ group, id, name }`, where `group` is the name of
- * the test group the test is in, `id` is the id of the test and `name` is it's
- * name.
+ * Return a list of objects `{ name: group, tests: [{ id, name, expected, actual }] }`,
+ * where `group` is the name of the test group the test is in, `id` is the id of
+ * the test and `name` is it's name, `actual` is the actual test result and
+ * `expected` is the expected test result..
  * @param s The string to parse.
- * @returns A list of objects `{ suite, id, name }`.
+ * @returns A list of objects `{ name: group, tests: [{ id, name, expected, actual }] }`.
  */
 export function parseTestErrors(s: string) {
-    return groupTestHelper(parseTestHelper(testErrorRegex, s));
+    return groupTestHelper(
+        parseTestHelper<TestTypeIn>(
+            testErrorRegex,
+            s,
+            errorMatchToObject
+        ).concat(parseTestHelper(testExceptionRegex, s, exceptionMatchToObject))
+    );
 }
 
 /**
  * Parse the given string `s`  using regexp `r` and return the results as a
- * list.
- * The regexp `r` shall define matching groups with names `group`, `id` and
- * `name`.
- * Return a list of test objects `{ group, id, name }` sorted by group name.
- * @param r The regexp to use to parse ethe string `s`. Shall define matching
- * groups with names `group`, `id` and `name`.
+ * list sorted by `group`.
+ * Return a list of test objects `{ group, ... }` sorted
+ * by group name.
+ * @param r The regexp to use to parse ethe string `s`.
  * @param s The string to parse.
- * @returns A list of test objects `{ group, id, name }` sorted by `group`.
+ * @param matchToObject: Function to convert the match object to a test oject.
+ * @returns A list of test objects `{ group, ... }`
+ * sorted by `group`.
  */
-function parseTestHelper(r: RegExp, s: string) {
+function parseTestHelper<T extends { group: string }>(
+    r: RegExp,
+    s: string,
+    // eslint-disable-next-line no-unused-vars
+    matchToObject: (m: RegExpMatchArray) => T
+) {
     if (!s.length) {
         return [];
     }
@@ -103,11 +166,7 @@ function parseTestHelper(r: RegExp, s: string) {
 
     const parsedTests = [];
     for (const match of matches) {
-        parsedTests.push({
-            group: match.groups?.group ? match.groups.group : "",
-            id: match.groups?.id ? parseInt(match.groups.id, 10) : 0,
-            name: match.groups?.name ? match.groups.name : "",
-        });
+        parsedTests.push(matchToObject(match));
     }
 
     if (parsedTests.length) {
@@ -120,36 +179,119 @@ function parseTestHelper(r: RegExp, s: string) {
 }
 
 /**
+ * Return an object constructed by the match groups of `match`.
+ * @param match The match object containing match groups `group`, `id`, `name`
+ * `exp` and `rec`.
+ * @returns The object filled with the match groups of `match`.
+ */
+function errorMatchToObject(match: RegExpMatchArray) {
+    return {
+        group: match.groups?.group ? match.groups.group : "",
+        id: match.groups?.id ? parseInt(match.groups.id, 10) : 0,
+        name: match.groups?.name ? match.groups.name : "",
+        expected: match.groups?.exp ? match.groups.exp : "",
+        actual: match.groups?.rec ? match.groups.rec : "",
+    };
+}
+
+/**
+ * Return an object constructed by the match groups of `match`.
+ * @param match The match object containing match groups `group`, `id`, `name`
+ * and `excp`.
+ * @returns The object filled with the match groups of `match`.
+ */
+function exceptionMatchToObject(match: RegExpMatchArray) {
+    return {
+        group: match.groups?.group ? match.groups.group : "",
+        id: match.groups?.id ? parseInt(match.groups.id, 10) : 0,
+        name: match.groups?.name ? match.groups.name : "",
+        actual: match.groups?.excp ? match.groups.excp : "",
+    };
+}
+
+/**
+ * Return an object constructed by the match groups of `match`.
+ * @param match The match object containing match groups `group`, `id` and
+ * `name`.
+ * @returns The object filled with the match groups of `match`.
+ */
+function listMatchToObject(match: RegExpMatchArray) {
+    return {
+        group: match.groups?.group ? match.groups.group : "",
+        id: match.groups?.id ? parseInt(match.groups.id, 10) : 0,
+        name: match.groups?.name ? match.groups.name : "",
+    };
+}
+
+/**
+ * The object of a test, which is not grouped by group.
+ */
+type TestTypeIn = {
+    group: string;
+    id: number;
+    name: string;
+    expected?: string;
+    actual?: string;
+};
+
+/**
+ * A single tests object.
+ *
+ * If the test is the result of parsing a list of tests, only `id` and `name`
+ * are filled, `expected` and `actual` do not exist.
+ *
+ * If the test is the result of parsing a test error, `expected` and `actual`
+ * hold the actual and expected value of that failed test.
+ */
+export type TestType = {
+    id: number;
+    name: string;
+    expected?: string;
+    actual?: string;
+};
+
+/**
  * Group the list of tests by field `group` and return a list of groups
  * containing lists of tests.
  * Require: `tests` is sorted by group name.
  * @param tests The list of tests to precess.
  * @returns A list of groups containing tests.
  */
-function groupTestHelper(
-    tests: {
-        group: string;
-        id: number;
-        name: string;
-    }[]
-) {
+function groupTestHelper(tests: TestTypeIn[]) {
     if (!tests.length) {
         return [];
     }
 
     let currGroup = {
         name: tests[0].group,
-        tests: [] as { id: number; name: string }[],
+        tests: [] as TestType[],
     };
     const groups = [currGroup];
 
     for (const test of tests) {
-        if (test.group === currGroup.name) {
-            currGroup.tests.push({ id: test.id, name: test.name });
-        } else {
+        if (test.group !== currGroup.name) {
             currGroup = { name: test.group, tests: [] };
             groups.push(currGroup);
         }
+        currGroup.tests.push(convertTestObject(test));
     }
     return groups;
+}
+
+/**
+ * Convert a `TestTypeIn` object in a `TestType` object.
+ * @param test The `TestTypeIn` object to convert.
+ * @returns `test` as `TestType` object.
+ */
+function convertTestObject(test: TestTypeIn) {
+    let t = {} as TestType;
+    t.id = test.id;
+    t.name = test.name;
+    if (test.expected) {
+        t.expected = test.expected;
+    }
+    if (test.actual) {
+        t.actual = test.actual;
+    }
+    return t;
 }

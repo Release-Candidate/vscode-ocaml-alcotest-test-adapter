@@ -234,6 +234,10 @@ export const normalListObject = [
         name: "Environment Model tests",
         tests: [
             {
+                id: 0,
+                name: "-42",
+            },
+            {
                 id: 1,
                 name: "4.2",
             },
@@ -383,6 +387,10 @@ export const normalListObject = [
         name: "Parser tests",
         tests: [
             {
+                id: 0,
+                name: "Bool Test 1",
+            },
+            {
                 id: 1,
                 name: "Bool Test 2",
             },
@@ -407,6 +415,10 @@ export const normalListObject = [
     {
         name: "Small Step tests",
         tests: [
+            {
+                id: 0,
+                name: "-42",
+            },
             {
                 id: 1,
                 name: "4.2",

@@ -11,6 +11,53 @@
  * objects.
  */
 
+import { TestType } from "../../src/parsing";
+
+/**
+ * This test failed because of an exception.
+ *  * The error is: suite: 'AlOcaml', group: 'Environment Model tests', id: 4,
+ * name: '11.+    11'.
+ */
+export const exceptionError = `Testing \`AlOcaml'.
+This run has ID \`WHF3OZ3W'.
+
+SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSFSSSSSSSSSSSSSSS
+SSSSSSSSSSSSSSSSS
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ [FAIL]        Environment Model tests          4   11.+    11.               │
+└──────────────────────────────────────────────────────────────────────────────┘
+[exception] Alocaml.Interp_common.TypeError("not a function type!")
+            Raised at Alocaml__Interp_common.type_error in file "lib/interp_common.ml", line 98, characters 19-38
+            Called from Alocaml__Interp.typeof_binop in file "lib/interp.ml", line 68, characters 28-41
+            Called from Alocaml__Interp.typecheck in file "lib/interp.ml" (inlined), line 160, characters 9-25
+            Called from Alocaml__Interp.interp_env in file "lib/interp.ml", line 276, characters 2-25
+            Called from Dune__exe__Test.test_interp_env in file "test/test.ml", line 59, characters 45-78
+            Called from Alcotest_engine__Core.Make.protect_test.(fun) in file "src/alcotest-engine/core.ml", line 180, characters 17-23
+            Called from Alcotest_engine__Monad.Identity.catch in file "src/alcotest-engine/monad.ml", line 24, characters 31-35
+
+Logs saved to \`~/Documents/code/OCaml-Interp/_build/_tests/AlOcaml/Environment Model tests.004.output'.
+ ──────────────────────────────────────────────────────────────────────────────
+
+Full test results in \`~/Documents/code/OCaml-Interp/_build/_tests/AlOcaml'.
+1 failure! in 0.000s. 1 test run.`;
+
+/**
+ * The result object of parsing `exceptionError`.
+ */
+export const exceptionErrorObject: { name: string; tests: TestType[] }[] = [
+    {
+        name: "Environment Model tests",
+        tests: [
+            {
+                actual: 'Alocaml.Interp_common.TypeError("not a function type!")\n            Raised at Alocaml__Interp_common.type_error in file "lib/interp_common.ml", line 98, characters 19-38\n            Called from Alocaml__Interp.typeof_binop in file "lib/interp.ml", line 68, characters 28-41\n            Called from Alocaml__Interp.typecheck in file "lib/interp.ml" (inlined), line 160, characters 9-25\n            Called from Alocaml__Interp.interp_env in file "lib/interp.ml", line 276, characters 2-25\n            Called from Dune__exe__Test.test_interp_env in file "test/test.ml", line 59, characters 45-78\n            Called from Alcotest_engine__Core.Make.protect_test.(fun) in file "src/alcotest-engine/core.ml", line 180, characters 17-23\n            Called from Alcotest_engine__Monad.Identity.catch in file "src/alcotest-engine/monad.ml", line 24, characters 31-35',
+                id: 4,
+                name: "11.+    11",
+            },
+        ],
+    },
+];
+
 /**
  * The error is: suite: 'AlOcaml', group: 'Big Step tests', id: 26,
  * name: 'comment should be ign...'.
@@ -48,6 +95,8 @@ export const oneErrorObject = [
         name: "Big Step tests",
         tests: [
             {
+                actual: '"22"',
+                expected: '"221"',
                 id: 26,
                 name: "comment should be ign..",
             },
@@ -110,10 +159,14 @@ export const twoErrorsObject = [
         name: "Big Step tests",
         tests: [
             {
+                actual: '"0"',
+                expected: '"01"',
                 id: 25,
                 name: "let ... if ... 2",
             },
             {
+                actual: '"22"',
+                expected: '"221"',
                 id: 26,
                 name: "comment should be ign..",
             },
@@ -155,6 +208,6 @@ Full test results in \`~/Documents/code/OCaml-Interp/_build/_tests/_build-defaul
 export const oneErrorInlineObject = [
     {
         name: "lib/interp_common.ml",
-        tests: [{ id: 11, name: "parse 1" }],
+        tests: [{ actual: "true", expected: "false", id: 11, name: "parse 1" }],
     },
 ];

@@ -40,6 +40,16 @@ export const runProfileLabel = "Run test";
 export const inlineTestsLabel = "Inline Tests (PPX)";
 
 /**
+ * Glob to search for sources of tests.
+ */
+export const testSourceGlob = "**/*.ml";
+
+/**
+ * Regex string to prepend to an inline test name.
+ */
+export const inlineTestPrefix = "let%test\\s+";
+
+/**
  ******************************************************************************
  *  Test runner constants.
  */

@@ -15,11 +15,15 @@ import * as io from "./osInteraction";
 import * as p from "./parsing";
 import * as vscode from "vscode";
 
+/**
+ * Object holding additional data about a `TestItem`.
+ */
 export type TestData = WeakMap<
     vscode.TestItem,
     {
-        runner: vscode.Uri;
+        runner: string;
         root: vscode.WorkspaceFolder;
+        isInline: boolean;
     }
 >;
 
@@ -63,6 +67,13 @@ async function addWorkspaceTests(
     );
     env.controller.items.add(workspaceItem);
     await addInlineTests(root, env, workspaceItem);
+    await generateTestList(
+        ["test/test.exe"],
+        root,
+        env,
+        workspaceItem,
+        c.testControllerLabel
+    );
 }
 
 async function addInlineTests(
@@ -77,21 +88,20 @@ async function addInlineTests(
 ) {
     const inlineRunnerPaths = await io.findFilesRelative(root, c.runnerExeGlob);
     const justBuildPaths = inlineRunnerPaths.filter(
-        (pa) => !pa.path.includes(c.sandboxDir)
+        (pa) => !pa.includes(c.sandboxDir)
     );
-    await generateTestList(justBuildPaths, root, env, workspaceItem, true);
     await generateTestList(
-        [vscode.Uri.joinPath(root.uri, "_build/default/test/test.exe")],
+        justBuildPaths,
         root,
         env,
         workspaceItem,
-        false
+        c.inlineTestsLabel
     );
 }
 
-// eslint-disable-next-line max-params, max-statements
+// eslint-disable-next-line max-params, max-statements, max-lines-per-function
 async function generateTestList(
-    justBuildPaths: vscode.Uri[],
+    runnerPaths: string[],
     root: vscode.WorkspaceFolder,
     env: {
         config: vscode.WorkspaceConfiguration;
@@ -100,38 +110,46 @@ async function generateTestList(
         testData: TestData;
     },
     workspaceItem: vscode.TestItem,
-    isInline: boolean
+    suiteLabel: string
 ) {
-    for await (const path of justBuildPaths) {
+    for await (const path of runnerPaths) {
         const out = await io.runRunnerListDune(root, path);
         env.outChannel.appendLine(
-            `Test runner: ${path.path}\nList of tests:\n${
-                out.stdout
-            }\nStderr: ${out.stderr}\nError: ${out.error ? out.error : ""}`
+            `Test runner: ${path}\nList of tests:\n${out.stdout}\nStderr: ${
+                out.stderr
+            }\nError: ${out.error ? out.error : ""}`
         );
         if (out.stdout) {
             const suiteItem = env.controller.createTestItem(
-                isInline ? c.inlineTestsLabel : "Tests",
-                isInline ? c.inlineTestsLabel : "Tests"
+                suiteLabel,
+                suiteLabel
             );
             workspaceItem.children.add(suiteItem);
             const groups = p.parseTestList(out.stdout);
             for await (const group of groups) {
-                const sourcePath = await io.findFilesRelative(root, group.name);
+                const sourcePath = await io.findSourceToTest(
+                    root,
+                    c.getCfgTestDirs(env.config),
+                    group.name
+                );
                 const groupItem = env.controller.createTestItem(
                     group.name,
                     group.name,
-                    sourcePath[0]
+                    sourcePath
                 );
                 suiteItem.children.add(groupItem);
                 for (const t of group.tests) {
                     const testItem = env.controller.createTestItem(
                         `${t.id}`,
                         t.name,
-                        sourcePath[0]
+                        sourcePath
                     );
                     groupItem.children.add(testItem);
-                    env.testData.set(testItem, { root, runner: path });
+                    env.testData.set(testItem, {
+                        root,
+                        runner: path,
+                        isInline: suiteLabel === c.inlineTestsLabel,
+                    });
                 }
             }
         }

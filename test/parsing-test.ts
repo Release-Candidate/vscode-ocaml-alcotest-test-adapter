@@ -66,6 +66,33 @@ mocha.describe("Parsing Functions", () => {
         });
     });
     //==========================================================================
+    mocha.describe("escapeRegex", () => {
+        mocha.it("Empty string is empty string", () => {
+            chai.assert.strictEqual(
+                // eslint-disable-next-line no-undefined
+                parse.escapeRegex(""),
+                "",
+                "'' -> ''"
+            );
+        });
+        mocha.it("Normal string does not change", () => {
+            chai.assert.strictEqual(
+                // eslint-disable-next-line no-undefined
+                parse.escapeRegex("Normal string does not change"),
+                "Normal string does not change",
+                "'Normal string does not change' -> 'Normal string does not change'"
+            );
+        });
+        mocha.it("Every special character is escaped", () => {
+            chai.assert.strictEqual(
+                // eslint-disable-next-line no-undefined
+                parse.escapeRegex(" \\ ^ $ . * + ? ( ) [ ] { } | - "),
+                " \\\\ \\^ \\$ \\. \\* \\+ \\? \\( \\) \\[ \\] \\{ \\} \\| \\- ",
+                "' \\ ^ $ . * + ? ( ) [ ] { } | -' -> ' \\\\ \\^ \\$ \\. \\* \\+ \\? \\( \\) \\[ \\] \\{ \\} \\| \\- '"
+            );
+        });
+    });
+    //==========================================================================
     mocha.describe("isValidVersion", () => {
         mocha.it("undefined is invalid", () => {
             chai.assert.strictEqual(
@@ -133,6 +160,44 @@ mocha.describe("Parsing Functions", () => {
         });
     });
     //==========================================================================
+    mocha.describe("getLineAndCol", () => {
+        mocha.it("Empty string -> 0:0", () => {
+            chai.assert.deepEqual(
+                // eslint-disable-next-line no-undefined
+                parse.getLineAndCol("", "fsgdfsgg"),
+                { line: 0, col: 0 },
+                "Empty string -> 0:0"
+            );
+        });
+        mocha.it("Not found -> 0:0", () => {
+            chai.assert.deepEqual(
+                // eslint-disable-next-line no-undefined
+                parse.getLineAndCol("A", "fsgdfsgg"),
+                { line: 0, col: 0 },
+                "Empty string -> 0:0"
+            );
+        });
+        mocha.it("At position 0:4", () => {
+            chai.assert.deepEqual(
+                // eslint-disable-next-line no-undefined
+                parse.getLineAndCol("o", "Hello World!"),
+                { line: 0, col: 4 },
+                "Hell_o_ World!"
+            );
+        });
+        mocha.it("At position 2:14", () => {
+            chai.assert.deepEqual(
+                // eslint-disable-next-line no-undefined
+                parse.getLineAndCol(
+                    "to search",
+                    "jkl\nhkkh\n01234567890123to search"
+                ),
+                { line: 2, col: 14 },
+                "'to search' in 'jkl\\nhkkh\\n01234567890123to search'"
+            );
+        });
+    });
+    //==========================================================================
     mocha.describe("parseTestList", () => {
         mocha.it("Empty string -> empty list", () => {
             chai.assert.deepEqual(
@@ -194,6 +259,14 @@ mocha.describe("Parsing Functions", () => {
                 parse.parseTestErrors(testErrors.oneError),
                 testErrors.oneErrorObject,
                 "Test error 'oneError'"
+            );
+        });
+        mocha.it("Test exception string -> list of test objects", () => {
+            chai.assert.deepEqual(
+                // eslint-disable-next-line no-undefined
+                parse.parseTestErrors(testErrors.exceptionError),
+                testErrors.exceptionErrorObject,
+                "Test error 'exceptionError'"
             );
         });
         mocha.it("Test two errors string -> list of test objects", () => {
