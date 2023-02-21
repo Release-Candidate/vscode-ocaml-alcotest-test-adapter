@@ -58,7 +58,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           name: Version ${{ env.GIT_TAG_NAME }}
-          body_path: first_changelog.md
+          body_path: latest_changelog.md
           files: ./vscode-ocaml-alcotest-test-adapter*.vsix
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

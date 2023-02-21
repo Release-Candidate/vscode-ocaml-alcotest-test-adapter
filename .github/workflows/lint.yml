@@ -37,3 +37,10 @@ jobs:
         run: |
           yarn --ignore-engines install --dev
           yarn --ignore-engines lint
+
+      - name: Annotate Code Linting Results
+        uses: ataylorme/eslint-annotate-action@v2
+        if: ${{ always() }}
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          report-json: "eslint_report.json"
