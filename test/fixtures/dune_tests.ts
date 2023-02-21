@@ -7,7 +7,7 @@
  * Date:     21.Feb.2023
  *
  * ==============================================================================
- * Dune test definition examples.
+ * Dune test definition examples and expected results of parsing them.
  */
 
 export const duneFile1 = `(test

@@ -16,7 +16,7 @@ import * as c from "./constants";
 import * as helpers from "./extension_helpers";
 import * as io from "./osInteraction";
 import * as p from "./parsing";
-import * as t from "./tests";
+import * as t from "./list_tests";
 import * as vscode from "vscode";
 
 // TODO: workspace.onDidChangeWorkspaceFolders
@@ -29,7 +29,6 @@ import * as vscode from "vscode";
  *
  * @param _context The `vscode.ExtensionContext` to use.
  */
-// eslint-disable-next-line max-statements
 export async function activate(context: vscode.ExtensionContext) {
     const outChannel = vscode.window.createOutputChannel(c.outputChannelName);
     outChannel.appendLine("OCaml Alcotest Test Adapter starting.");
@@ -42,6 +41,18 @@ export async function activate(context: vscode.ExtensionContext) {
         outChannel.appendLine("Not in a workspace/no folder opened. Exiting.");
         return;
     }
+    await setupExtension(context, outChannel);
+}
+
+/**
+ * Setup the extension and add the tests to the Text Explorer view.
+ * @param context The extension's context.
+ * @param outChannel The channel to log to.
+ */
+async function setupExtension(
+    context: vscode.ExtensionContext,
+    outChannel: vscode.OutputChannel
+) {
     const testData: t.TestData = new WeakMap();
 
     const config = vscode.workspace.getConfiguration(c.cfgSection);
@@ -106,6 +117,11 @@ async function runHandler(
     run.end();
 }
 
+/**
+ * Run a single test and set the test's state.
+ * @param env The environment needed to run a test.
+ * @param test The test to run.
+ */
 async function runSingleTest(
     env: {
         config: vscode.WorkspaceConfiguration;
@@ -140,8 +156,9 @@ async function runSingleTest(
 
 /**
  * Parse a test and set the test state.
- * @param env
- * @param data
+ * Including failure location in the source code.
+ * @param env The environment needed for the parsing.
+ * @param data The data to parse and construct the test result.
  */
 async function parseTestResult(
     env: {
@@ -196,6 +213,26 @@ async function constructMessage(
     let message = new vscode.TestMessage(
         data.out.stdout ? data.out.stdout : ""
     );
+    const loc = await setSourceLocation(data);
+    if (loc) {
+        message.location = loc;
+    }
+    message.actualOutput = errElem.actual;
+    message.expectedOutput = errElem.expected;
+    return message;
+}
+
+/**
+ * Return the line and column of the test error.
+ * @param data The data needed to get the source location.
+ * @returns A `Location` of the error or `undefined`.
+ */
+async function setSourceLocation(data: {
+    out: io.Output;
+    startTime: number;
+    test: vscode.TestItem;
+    testData: t.TestData;
+}) {
     if (data.test.uri) {
         const textData = await vscode.workspace.fs.readFile(data.test.uri);
         const ret = data.testData.get(data.test);
@@ -204,9 +241,8 @@ async function constructMessage(
             regexPref + p.escapeRegex(data.test.label),
             textData.toString()
         );
-        message.location = new vscode.Location(data.test.uri, loc);
+        return new vscode.Location(data.test.uri, loc);
     }
-    message.actualOutput = errElem.actual;
-    message.expectedOutput = errElem.expected;
-    return message;
+    // eslint-disable-next-line no-undefined
+    return undefined;
 }

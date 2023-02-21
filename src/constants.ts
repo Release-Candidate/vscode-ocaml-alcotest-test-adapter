@@ -57,12 +57,17 @@ export const inlineTestPrefix = "let%test\\s+";
 /**
  * Path of the build sandbox directory to ignore when searching for executables.
  */
-export const sandboxDir = "/_build/.sandbox";
+export const sandboxDir = "_build/.sandbox";
 
 /**
  * The cmd to call `dune`.
  */
 export const duneCmd = "dune";
+
+/**
+ * The name of dune configuration files in the test directories.
+ */
+export const duneFileName = "dune";
 
 /**
  * The argument to get dune's version.

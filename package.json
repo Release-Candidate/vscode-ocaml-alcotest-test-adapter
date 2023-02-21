@@ -1,7 +1,8 @@
 {
     "name": "vscode-ocaml-alcotest-test-adapter",
     "displayName": "OCaml Alcotest Test Explorer",
-    "version": "0.0.1",
+    "version": "0.1.0",
+    "preview": true,
     "publisher": "release-candidate",
     "description": "Support for OCaml Alcotest and Alcotest inline tests.",
     "keywords": [
