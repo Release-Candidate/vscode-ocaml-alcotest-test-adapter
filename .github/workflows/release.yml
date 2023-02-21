@@ -48,7 +48,7 @@ jobs:
       - name: Generate Changelog
         run: |
           yarn --ignore-engines install --dev
-          yarn --ignore-engines changelog '{:version "${{ env.GIT_TAG_NAME }}"}'
+          yarn --ignore-engines ts-node generate_changelog.ts ${{ env.GIT_TAG_NAME }}
 
       - name: Build VSIX
         run: yarn --ignore-engines package
