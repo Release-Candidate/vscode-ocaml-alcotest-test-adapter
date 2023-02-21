@@ -63,8 +63,17 @@
         {
             "type": "yarn",
             "task": "lint",
-            "problemMatcher": ["$eslint-stylish", "$eslint-compact"],
+            "problemMatcher": [
+                "$eslint-stylish",
+                "$eslint-compact"
+            ],
             "label": "yarn: lint"
+        },
+        {
+            "type": "yarn",
+            "task": "lint-github",
+            "problemMatcher": [],
+            "label": "yarn: lint-github"
         }
     ]
 }

@@ -36,7 +36,7 @@ jobs:
       - name: Eslint
         run: |
           yarn --ignore-engines install --dev
-          yarn --ignore-engines lint
+          yarn --ignore-engines lint-github
 
       - name: Annotate Code Linting Results
         uses: ataylorme/eslint-annotate-action@v2

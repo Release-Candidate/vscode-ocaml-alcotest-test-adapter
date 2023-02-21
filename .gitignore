@@ -5,3 +5,4 @@ alcotest_*.txt
 yarn-error.log
 vscode-ocaml-alcotest-test-adapter-*.vsix
 .vscode-test
+eslint_report.json
