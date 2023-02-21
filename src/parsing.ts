@@ -10,6 +10,10 @@
  * Parse test lists, test results, files for tests, ...
  */
 
+import * as c from "./constants";
+
+/* eslint-disable max-lines */
+
 /**
  * Regexp to escape special regexp characters in strings.
  */
@@ -22,6 +26,22 @@ const regexpRegex = /[\\^$.*+?()[\]{}|-]/gu;
  */
 const versionRegex =
     /^[\s]*[vV]?(?:ersion)?\s*(?<version>[\p{N}][\p{N}\p{P}~]*)[\s]*$/mu;
+
+/**
+ * Regex to parse dune test definitions to get the name of the tests
+ * executables, stored in group `path`.
+ * Parsing `(test[s] (name[s] ...))` stanzas.
+ */
+const duneTestRegex1 =
+    /\(test[s]?\s+\(name[s]?(?<path>(?:\s+[^()\s]+)+)\s*\).*?\s*\)/gmsu;
+
+/**
+ * Regex to parse dune test definitions to get the name of the tests
+ * executables.
+ * Parsing `(test[s] (name[s] ...))` stanzas.
+ */
+const duneTestRegex2 =
+    /\(alias\s+(?:\(name\s+)?runtest\s*\).*?\(action\s+\(run\s+(?:%\{exe:)?(?<path>[^()\s}]+)/gmsu;
 
 /**
  * Regexp to parse Alcotest test lists.
@@ -40,7 +60,7 @@ const testListRegex = /^(?<group>\S+.*?)\s+(?<id>\d+)\s+(?<name>.*)\.$/gmu;
  * actual value is returned in the fifth group, `rec`.
  */
 const testErrorRegex =
-    /^│\s+\[FAIL\]\s+(?<group>\S+.*?)\s+(?<id>\d+)\s+(?<name>.*?)\.\s+│$.*?^\s+Expected:\s+`(?<exp>.*?)'\s*\n+\s+\s+Received:\s+`(?<rec>.*?)'\s*\n\n/gmsu;
+    /^│\s+\[FAIL\]\s+(?<group>\S+[^\n]*?)\s+(?<id>\d+)\s+(?<name>[^\n]+)\.\s+│\s+[└─┘]+\s+A.*?^\s+Expected:\s+`(?<exp>.*?)'\s*\n+\s+\s+Received:\s+`(?<rec>.*?)'\s*\n\n/gmsu;
 
 /**
  * Regexp to parse Alcotest test results for errors.
@@ -51,7 +71,7 @@ const testErrorRegex =
  * `excp`.
  */
 const testExceptionRegex =
-    /^│\s+\[FAIL\]\s+(?<group>\S+.*?)\s+(?<id>\d+)\s+(?<name>.*?)\.\s+│$.*?^(?=\[exception\]\s+(?<excp>.*?)\n\n)/gmsu;
+    /^│\s+\[FAIL\]\s+(?<group>\S+[^\n]*?)\s+(?<id>\d+)\s+(?<name>[^\n]+)\.\s+│\s+[└─┘]+\s+^(?=\[exception\]\s+(?<excp>.*?)\n\n)/gmsu;
 
 /**
  * Escape special regexp characters in `s`.
@@ -104,6 +124,48 @@ export function getLineAndCol(s: string, text: string) {
     }
 
     return { line: 0, col: 0 };
+}
+
+/**
+ * Parse the given dune stanzas for paths to test executables.
+ * @param s The content of a dune file to parse for test executable names.
+ * @returns A list of found test executable paths relative to the dune file
+ * location.
+ */
+export function parseDuneTests(s: string) {
+    if (!s.length) {
+        return [];
+    }
+
+    const paths: string[] = [];
+    const matches1 = s.matchAll(duneTestRegex1);
+    for (const match of matches1) {
+        paths.push(...matchToRelPath(match));
+    }
+    const matches2 = s.matchAll(duneTestRegex2);
+    for (const match of matches2) {
+        paths.push(...matchToRelPath(match));
+    }
+
+    return paths;
+}
+
+/**
+ * Add the relative path of the matched executable to the list of paths.
+ * Add an executable suffix if not already there and an `./` prefix if the path
+ * isn't relative already.
+ * Require: the regex match shall contain the match group `path`.
+ * @param match The match object to process.
+ */
+function matchToRelPath(match: RegExpMatchArray) {
+    const exes = match.groups ? match.groups.path.trim().split(/\s+/u) : [];
+    const relPaths = exes.map((p) => {
+        const pa = p.trim();
+        const pab = pa.endsWith(c.exeSuffix) ? pa : pa.concat(c.exeSuffix);
+        return pab.startsWith(".") ? pab : "./".concat(pab);
+    });
+
+    return relPaths;
 }
 
 /**

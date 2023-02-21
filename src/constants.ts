@@ -106,6 +106,11 @@ export const runnerTestOpts = ["--color=never", "-c", "-e"];
 export const runnerExeGlob = "**/inline_test_runner_*.exe";
 
 /**
+ * The suffix for test runner executables.
+ */
+export const exeSuffix = ".exe";
+
+/**
  ******************************************************************************
  *  Configuration constants.
  */

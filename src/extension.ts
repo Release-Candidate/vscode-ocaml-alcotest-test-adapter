@@ -52,12 +52,13 @@ export async function activate(context: vscode.ExtensionContext) {
     );
     context.subscriptions.push(controller);
 
-    controller.createRunProfile(
+    const runProfile = controller.createRunProfile(
         c.runProfileLabel,
         vscode.TestRunProfileKind.Run,
         (r, tok) =>
             runHandler({ config, controller, outChannel, testData }, r, tok)
     );
+    context.subscriptions.push(runProfile);
 
     await t.addTests({ config, controller, outChannel, testData });
 
@@ -85,6 +86,8 @@ async function runHandler(
 ) {
     const run = env.controller.createTestRun(request);
     const tests = t.testList(request, env.controller);
+
+    // TODO: run.errored
 
     for await (const test of tests) {
         if (!token.isCancellationRequested) {
@@ -136,7 +139,7 @@ async function runSingleTest(
 }
 
 /**
- * Parse a test
+ * Parse a test and set the test state.
  * @param env
  * @param data
  */
@@ -198,7 +201,7 @@ async function constructMessage(
         const ret = data.testData.get(data.test);
         const regexPref = ret?.isInline ? c.inlineTestPrefix + '"' : '"';
         const loc = helpers.getPosition(
-            regexPref + p.escapeRegex(data.test.label) + '"',
+            regexPref + p.escapeRegex(data.test.label),
             textData.toString()
         );
         message.location = new vscode.Location(data.test.uri, loc);

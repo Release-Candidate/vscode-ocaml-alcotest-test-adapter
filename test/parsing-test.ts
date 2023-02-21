@@ -12,10 +12,13 @@
  */
 
 import * as chai from "chai";
+import * as duneTests from "./fixtures/dune_tests";
 import * as mocha from "mocha";
 import * as parse from "../src/parsing";
 import * as testErrors from "./fixtures/test_errors";
 import * as testLists from "./fixtures/test_lists";
+
+/* eslint-disable max-lines */
 
 /**
  * *****************************************************************************
@@ -198,6 +201,59 @@ mocha.describe("Parsing Functions", () => {
         });
     });
     //==========================================================================
+    mocha.describe("parseDuneTests", () => {
+        mocha.it("Empty string -> empty list", () => {
+            chai.assert.deepEqual(
+                // eslint-disable-next-line no-undefined
+                parse.parseDuneTests(""),
+                [],
+                "Empty string -> empty list"
+            );
+        });
+        mocha.it("Not a dune file -> empty list", () => {
+            chai.assert.deepEqual(
+                // eslint-disable-next-line no-undefined
+                parse.parseDuneTests(
+                    "shdfljkg hfdhdf (tests notest notest2) sgjlsdg hjsdfgl"
+                ),
+                [],
+                "Not a dune file -> empty list"
+            );
+        });
+        mocha.it("dune test -> one test", () => {
+            chai.assert.deepEqual(
+                // eslint-disable-next-line no-undefined
+                parse.parseDuneTests(duneTests.duneFile1),
+                duneTests.duneFile1Exe,
+                "dune test -> one test"
+            );
+        });
+        mocha.it("dune tests -> 4 tests", () => {
+            chai.assert.deepEqual(
+                // eslint-disable-next-line no-undefined
+                parse.parseDuneTests(duneTests.duneFile2),
+                duneTests.duneFile2Exe,
+                "duneFile2 -> duneFile2Exe"
+            );
+        });
+        mocha.it("run %{exe:main.exe} -> main.exe", () => {
+            chai.assert.deepEqual(
+                // eslint-disable-next-line no-undefined
+                parse.parseDuneTests(duneTests.duneFile3),
+                duneTests.duneFile3Exe,
+                "duneFile3 -> duneFile3Exe"
+            );
+        });
+        mocha.it("run ./...exe -> 2 tests", () => {
+            chai.assert.deepEqual(
+                // eslint-disable-next-line no-undefined
+                parse.parseDuneTests(duneTests.duneFile4),
+                duneTests.duneFile4Exe,
+                "duneFile4 -> duneFile4Exe"
+            );
+        });
+    });
+    //==========================================================================
     mocha.describe("parseTestList", () => {
         mocha.it("Empty string -> empty list", () => {
             chai.assert.deepEqual(
@@ -275,6 +331,22 @@ mocha.describe("Parsing Functions", () => {
                 parse.parseTestErrors(testErrors.twoErrors),
                 testErrors.twoErrorsObject,
                 "Test error 'twoErrors'"
+            );
+        });
+        mocha.it("Test three errors string 1 -> list of test objects", () => {
+            chai.assert.deepEqual(
+                // eslint-disable-next-line no-undefined
+                parse.parseTestErrors(testErrors.threeErrors1),
+                testErrors.threeErrorsObject,
+                "Test error 'threeErrors1'"
+            );
+        });
+        mocha.it("Test three errors string 2 -> list of test objects", () => {
+            chai.assert.deepEqual(
+                // eslint-disable-next-line no-undefined
+                parse.parseTestErrors(testErrors.threeErrors2),
+                testErrors.threeErrorsObject,
+                "Test error 'threeErrors2'"
             );
         });
         mocha.it("Inline test error string -> list of test objects", () => {
