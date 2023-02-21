@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: MIT
+# Copyright (C) 2023 Roland Csaszar
+#
+# Project:  vscode-ocaml-alcotest-test-adapter
+# File:     lint.yml
+# Date:     21.Feb.2023
+#
+# ==============================================================================
+
+name: Lint
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  eslint:
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        node-version: [14.x, 16.x, 18.x]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Eslint
+        run: |
+          yarn --ignore-engines install --dev
+          yarn --ignore-engines lint

@@ -102,6 +102,7 @@
     },
     "scripts": {
         "clean": "del-cli -- out",
+        "lint": "eslint src/**/*.ts test/**/*.ts",
         "compile": "tsc -p ./",
         "test": "yarn --ignore-engines run compile && node out/test/runner.js",
         "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",

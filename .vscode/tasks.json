@@ -59,6 +59,12 @@
             "task": "test",
             "problemMatcher": [],
             "label": "yarn: test"
+        },
+        {
+            "type": "yarn",
+            "task": "lint",
+            "problemMatcher": ["$eslint-stylish", "$eslint-compact"],
+            "label": "yarn: lint"
         }
     ]
 }

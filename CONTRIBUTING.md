@@ -20,6 +20,7 @@ All yarn commands add `--ignore-engines` to not get a spurious warning:
 `warning vscode-ocaml-alcotest-test-adapter@VERSION:The engine "vscode" appears to be invalid.`
 
 - `yarn --ignore-engines clean` - deletes the directory `./out`
+- `yarn --ignore-engines lint` - runs eslint on all source files
 - `yarn --ignore-engines compile` - compiles the Typescript sources to `./out/` and generates the source maps
 - `yarn --ignore-engines test` - compiles the extension and runs the tests
 - `yarn --ignore-engines esbuild` - compiles the Typescript sources and bundles them to `./out/extension.js` and adds a source map `./out/extension.js.map`. This is used for testing.
