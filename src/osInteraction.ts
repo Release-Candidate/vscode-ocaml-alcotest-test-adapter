@@ -10,13 +10,16 @@
  * File system access, reading files, calling executables and other interactions
  * with the OS. I/O.
  */
+
 /* eslint-disable camelcase */
+/* eslint-disable max-lines */
 
 import * as c from "./constants";
 import * as child_process from "child_process";
 import internal = require("stream");
 import * as parse from "./parsing";
 import * as vscode from "vscode";
+import path = require("path");
 
 /**
  * Object holding the output of a process.
@@ -54,8 +57,8 @@ export async function filterExistingDirs(
 ) {
     const promises = [];
     for (let dir of dirs) {
-        const path = vscode.Uri.joinPath(root.uri, dir);
-        promises.push(vscode.workspace.fs.stat(path));
+        const pathUri = vscode.Uri.joinPath(root.uri, dir);
+        promises.push(vscode.workspace.fs.stat(pathUri));
     }
     const stats = await Promise.allSettled(promises);
 
@@ -103,10 +106,10 @@ export async function findSourceToTest(
         return vscode.Uri.joinPath(root.uri, option1[0]);
     }
 
-    for await (const path of testDirs) {
+    for await (const pathTestDir of testDirs) {
         const option2 = await findFilesRelative(
             root,
-            path + "/" + c.testSourceGlob
+            pathTestDir + "/" + c.testSourceGlob
         );
         for await (const opt of option2) {
             const textData = await vscode.workspace.fs.readFile(
@@ -142,6 +145,10 @@ export async function findFilesRelative(
     } catch (error) {
         return [];
     }
+}
+
+export function concatRelativePaths(dir: string, append: string) {
+    return path.normalize(dir.concat("/" + append));
 }
 
 /**

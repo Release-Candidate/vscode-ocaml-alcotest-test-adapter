@@ -7,9 +7,12 @@
  * Date:     21.Feb.2023
  *
  * ==============================================================================
- * Dune test definition examples and expected results of parsing them.
+ * Dune test configuration examples and expected results of parsing them.
  */
 
+/**
+ * Dune file using `test` and `name` stanzas.
+ */
 export const duneFile1 = `(test
  (name test)
  (libraries alcotest lib1 lib2
@@ -20,6 +23,9 @@ export const duneFile1 = `(test
  */
 export const duneFile1Exe = ["./test.exe"];
 
+/**
+ * Dune file using `tests` and `names` stanzas.
+ */
 export const duneFile2 = `(tests
  (names
   testName1
@@ -40,6 +46,9 @@ export const duneFile2Exe = [
     "./testName4.exe",
 ];
 
+/**
+ * Dune file using `alias` and `(name runtest)` stanzas.
+ */
 export const duneFile3 = `(executable
  (name main)
  (libraries lib1 lib2 )
@@ -55,6 +64,9 @@ export const duneFile3 = `(executable
  */
 export const duneFile3Exe = ["./main.exe"];
 
+/**
+ * Dune file using `rule` and `(alias runtest)` stanzas.
+ */
 export const duneFile4 = `(executables
  (names test test2)
  (libraries

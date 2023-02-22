@@ -147,7 +147,9 @@ async function parseDuneFiles(
         );
         const runnerRelPaths = p.parseDuneTests(bytes.toString());
         runnerPaths.push(
-            ...runnerRelPaths.map((pa) => path.dirname(df).concat("/" + pa))
+            ...runnerRelPaths.map((pa) =>
+                io.concatRelativePaths(path.dirname(df), pa)
+            )
         );
     }
     return runnerPaths;

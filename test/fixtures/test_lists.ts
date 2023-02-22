@@ -214,11 +214,11 @@ export const normalListObject = [
             },
             {
                 id: 23,
-                name: "if ... then let ..",
+                name: "if ... then let ",
             },
             {
                 id: 24,
-                name: "let ... if ..",
+                name: "let ... if ",
             },
             {
                 id: 25,
@@ -331,7 +331,7 @@ export const normalListObject = [
             },
             {
                 id: 24,
-                name: "let ... in if..",
+                name: "let ... in if",
             },
             {
                 id: 25,
@@ -339,11 +339,11 @@ export const normalListObject = [
             },
             {
                 id: 26,
-                name: "let in fun ..",
+                name: "let in fun ",
             },
             {
                 id: 27,
-                name: "let in let in fun ..",
+                name: "let in let in fun ",
             },
             {
                 id: 28,
@@ -509,11 +509,11 @@ export const normalListObject = [
             },
             {
                 id: 23,
-                name: "if ... then let ... else ..",
+                name: "if ... then let ... else ",
             },
             {
                 id: 24,
-                name: "let ... in if ..",
+                name: "let ... in if ",
             },
             {
                 id: 25,

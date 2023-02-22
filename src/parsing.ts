@@ -48,8 +48,9 @@ const duneTestRegex2 =
  * The test group's name is saved in the first match group, `group`, the ID is captured
  * in the second group with name `id` and the test's name is the third group
  * called `name`.
+ * Ignores added (or not added) points at the end of the name.
  */
-const testListRegex = /^(?<group>\S+.*?)\s+(?<id>\d+)\s+(?<name>.*)\.$/gmu;
+const testListRegex = /^(?<group>\S+.*?)\s+(?<id>\d+)\s+(?<name>.*?)\.+$/gmu;
 
 /**
  * Regexp to parse Alcotest test results for errors.
@@ -60,7 +61,7 @@ const testListRegex = /^(?<group>\S+.*?)\s+(?<id>\d+)\s+(?<name>.*)\.$/gmu;
  * actual value is returned in the fifth group, `rec`.
  */
 const testErrorRegex =
-    /^│\s+\[FAIL\]\s+(?<group>\S+[^\n]*?)\s+(?<id>\d+)\s+(?<name>[^\n]+)\.\s+│\s+[└─┘]+\s+A.*?^\s+Expected:\s+`(?<exp>.*?)'\s*\n+\s+\s+Received:\s+`(?<rec>.*?)'\s*\n\n/gmsu;
+    /^│\s+\[FAIL\]\s+(?<group>\S+[^\n]*?)\s+(?<id>\d+)\s+(?<name>[^\n]+?)\.+\s+│\s+[└─┘]+\s+A.*?^\s+Expected:\s+`(?<exp>.*?)'\s*\n+\s+\s+Received:\s+`(?<rec>.*?)'\s*\n\n/gmsu;
 
 /**
  * Regexp to parse Alcotest test results for errors.
@@ -71,7 +72,7 @@ const testErrorRegex =
  * `excp`.
  */
 const testExceptionRegex =
-    /^│\s+\[FAIL\]\s+(?<group>\S+[^\n]*?)\s+(?<id>\d+)\s+(?<name>[^\n]+)\.\s+│\s+[└─┘]+\s+^(?=\[exception\]\s+(?<excp>.*?)\n\n)/gmsu;
+    /^│\s+\[FAIL\]\s+(?<group>\S+[^\n]*?)\s+(?<id>\d+)\s+(?<name>[^\n]+?)\.+\s+│\s+[└─┘]+\s+^(?=\[exception\]\s+(?<excp>.*?)\n\n)/gmsu;
 
 /**
  * Escape special regexp characters in `s`.
@@ -153,7 +154,7 @@ export function parseDuneTests(s: string) {
 /**
  * Add the relative path of the matched executable to the list of paths.
  * Add an executable suffix if not already there and an `./` prefix if the path
- * isn't relative already.
+ * isn't already a relative one.
  * Require: the regex match shall contain the match group `path`.
  * @param match The match object to process.
  */

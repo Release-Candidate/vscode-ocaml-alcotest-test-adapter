@@ -19,6 +19,8 @@ import * as p from "./parsing";
 import * as t from "./list_tests";
 import * as vscode from "vscode";
 
+/* eslint-disable no-extra-parens */
+
 // TODO: workspace.onDidChangeWorkspaceFolders
 
 /**
@@ -72,9 +74,6 @@ async function setupExtension(
     context.subscriptions.push(runProfile);
 
     await t.addTests({ config, controller, outChannel, testData });
-
-    controller.resolveHandler = async () =>
-        t.addTests({ config, controller, outChannel, testData });
 }
 
 /**
@@ -98,8 +97,6 @@ async function runHandler(
     const run = env.controller.createTestRun(request);
     const tests = t.testList(request, env.controller);
 
-    // TODO: run.errored
-
     for await (const test of tests) {
         if (!token.isCancellationRequested) {
             const passEnv = {
@@ -110,6 +107,8 @@ async function runHandler(
                 testData: env.testData,
             };
             passEnv.run = run;
+
+            run.started(test);
             await runSingleTest(passEnv, test);
         }
     }
@@ -132,21 +131,21 @@ async function runSingleTest(
     },
     test: vscode.TestItem
 ) {
+    const ret = env.testData.get(test);
     env.outChannel.appendLine(
         `Running test "${test.parent ? test.parent.label : ""}   ${
             test.id
         }    ${test?.label}"`
     );
-    const ret = env.testData.get(test);
     if (ret) {
         const { root, runner } = ret;
         const startTime = Date.now();
         test.busy = true;
-
         const out = await io.runRunnerTestsDune(root, runner, [
             `${test.parent?.label}`,
             `${test.id}`,
         ]);
+
         await parseTestResult(env, { out, startTime, test });
         // eslint-disable-next-line require-atomic-updates
         test.busy = false;
@@ -174,23 +173,76 @@ async function parseTestResult(
         test: vscode.TestItem;
     }
 ) {
-    env.outChannel.appendLine(`Test output:\n${data.out.stdout}`);
+    env.outChannel.appendLine(
+        `Test output:\n${data.out.stdout}${data.out.stderr}${
+            data.out.error ? data.out.error : ""
+        }`
+    );
+    if (data.out.error || data.out.stderr?.length) {
+        const msg = data.out.stderr?.length
+            ? data.out.stderr
+            : (data.out.error as string);
+        await setRunnerError(env, msg, data.test);
+        return;
+    }
+
     const [errList] = p.parseTestErrors(data.out.stdout as string);
     const errElem = errList?.tests.find((e) => `${e.id}` === data.test.id);
     if (errElem) {
-        let message = await constructMessage(
-            {
-                out: data.out,
-                startTime: data.startTime,
-                test: data.test,
-                testData: env.testData,
-            },
-            errElem
-        );
-        env.run.failed(data.test, message, Date.now() - data.startTime);
+        await setTestError(env, data, errElem);
     } else {
         env.run.passed(data.test, Date.now() - data.startTime);
     }
+}
+
+/**
+ * Set the state of the test to 'failed'.
+ * @param env The environment of the extension.
+ * @param data The needed data.
+ * @param errElem The test that produced the error.
+ */
+async function setTestError(
+    env: {
+        config: vscode.WorkspaceConfiguration;
+        controller: vscode.TestController;
+        outChannel: vscode.OutputChannel;
+        testData: t.TestData;
+        run: vscode.TestRun;
+    },
+    data: { out: io.Output; startTime: number; test: vscode.TestItem },
+    errElem: p.TestType
+) {
+    data.test.label = errElem.name;
+    let message = await constructMessage(
+        {
+            txt: data.out.stdout ? data.out.stdout : "",
+            test: data.test,
+            testData: env.testData,
+        },
+        errElem
+    );
+    env.run.failed(data.test, message, Date.now() - data.startTime);
+}
+
+/**
+ * The test produced an error, that means e.g. that the test could not be
+ * compiled.
+ * @param env The extension's environment.
+ * @param msg The error message.
+ * @param test The test that produced the error.
+ */
+async function setRunnerError(
+    env: {
+        testData: t.TestData;
+        run: vscode.TestRun;
+    },
+    msg: string,
+    test: vscode.TestItem
+) {
+    const mess = new vscode.TestMessage(msg);
+    const loc = await setSourceLocation(test, env.testData);
+    mess.location = loc;
+    env.run.errored(test, mess);
 }
 
 /**
@@ -203,17 +255,14 @@ async function parseTestResult(
  */
 async function constructMessage(
     data: {
-        out: io.Output;
-        startTime: number;
+        txt: string;
         test: vscode.TestItem;
         testData: t.TestData;
     },
     errElem: p.TestType
 ) {
-    let message = new vscode.TestMessage(
-        data.out.stdout ? data.out.stdout : ""
-    );
-    const loc = await setSourceLocation(data);
+    let message = new vscode.TestMessage(data.txt);
+    const loc = await setSourceLocation(data.test, data.testData);
     if (loc) {
         message.location = loc;
     }
@@ -227,21 +276,16 @@ async function constructMessage(
  * @param data The data needed to get the source location.
  * @returns A `Location` of the error or `undefined`.
  */
-async function setSourceLocation(data: {
-    out: io.Output;
-    startTime: number;
-    test: vscode.TestItem;
-    testData: t.TestData;
-}) {
-    if (data.test.uri) {
-        const textData = await vscode.workspace.fs.readFile(data.test.uri);
-        const ret = data.testData.get(data.test);
+async function setSourceLocation(test: vscode.TestItem, testData: t.TestData) {
+    if (test.uri) {
+        const textData = await vscode.workspace.fs.readFile(test.uri);
+        const ret = testData.get(test);
         const regexPref = ret?.isInline ? c.inlineTestPrefix + '"' : '"';
         const loc = helpers.getPosition(
-            regexPref + p.escapeRegex(data.test.label),
+            regexPref + p.escapeRegex(test.label),
             textData.toString()
         );
-        return new vscode.Location(data.test.uri, loc);
+        return new vscode.Location(test.uri, loc);
     }
     // eslint-disable-next-line no-undefined
     return undefined;
