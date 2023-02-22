@@ -12,7 +12,6 @@
  */
 
 /* eslint-disable camelcase */
-/* eslint-disable max-lines */
 
 import * as c from "./constants";
 import * as child_process from "child_process";

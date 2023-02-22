@@ -1,4 +1,3 @@
-/* eslint-disable max-lines-per-function */
 /*
  * SPDX-License-Identifier: MIT
  * Copyright (C) 2023 Roland Csaszar
@@ -18,7 +17,7 @@ import * as parse from "../src/parsing";
 import * as testErrors from "./fixtures/test_errors";
 import * as testLists from "./fixtures/test_lists";
 
-/* eslint-disable max-lines */
+/* eslint-disable max-lines-per-function */
 
 /**
  * *****************************************************************************
@@ -29,7 +28,6 @@ mocha.describe("Parsing Functions", () => {
     mocha.describe("trim", () => {
         mocha.it("Empty string ''", () => {
             chai.assert.strictEqual(
-                // eslint-disable-next-line no-undefined
                 "".trim(),
                 "",
                 "Empty string does not change"
@@ -37,7 +35,6 @@ mocha.describe("Parsing Functions", () => {
         });
         mocha.it("Just whitespace", () => {
             chai.assert.strictEqual(
-                // eslint-disable-next-line no-undefined
                 "\n  \t \n  ".trim(),
                 "",
                 "'\\n  \\t \\n  ' -> ''"
@@ -45,7 +42,6 @@ mocha.describe("Parsing Functions", () => {
         });
         mocha.it("No whitespace", () => {
             chai.assert.strictEqual(
-                // eslint-disable-next-line no-undefined
                 "Foobačšľ+ťíéšťr".trim(),
                 "Foobačšľ+ťíéšťr",
                 "Without whitespace 'Foobačšľ+ťíéšťr' -> no change"
@@ -53,7 +49,6 @@ mocha.describe("Parsing Functions", () => {
         });
         mocha.it("Inner whitespace", () => {
             chai.assert.strictEqual(
-                // eslint-disable-next-line no-undefined
                 "Fo o\tb ač\n š ľ+\nť íé š\tťr".trim(),
                 "Fo o\tb ač\n š ľ+\nť íé š\tťr",
                 "Inner whitespace 'Fo o\\tb ač\\n š ľ+\\nť íé š\\tťr' -> no change"
@@ -61,7 +56,6 @@ mocha.describe("Parsing Functions", () => {
         });
         mocha.it("Outer whitespace", () => {
             chai.assert.strictEqual(
-                // eslint-disable-next-line no-undefined
                 "  \t \n foobar\n \t ".trim(),
                 "foobar",
                 "Outer whitespace should be removed '  \\t \\n foobar\\n \\t '-> 'foobar'"
@@ -71,16 +65,10 @@ mocha.describe("Parsing Functions", () => {
     //==========================================================================
     mocha.describe("escapeRegex", () => {
         mocha.it("Empty string is empty string", () => {
-            chai.assert.strictEqual(
-                // eslint-disable-next-line no-undefined
-                parse.escapeRegex(""),
-                "",
-                "'' -> ''"
-            );
+            chai.assert.strictEqual(parse.escapeRegex(""), "", "'' -> ''");
         });
         mocha.it("Normal string does not change", () => {
             chai.assert.strictEqual(
-                // eslint-disable-next-line no-undefined
                 parse.escapeRegex("Normal string does not change"),
                 "Normal string does not change",
                 "'Normal string does not change' -> 'Normal string does not change'"
@@ -88,7 +76,6 @@ mocha.describe("Parsing Functions", () => {
         });
         mocha.it("Every special character is escaped", () => {
             chai.assert.strictEqual(
-                // eslint-disable-next-line no-undefined
                 parse.escapeRegex(" \\ ^ $ . * + ? ( ) [ ] { } | - "),
                 " \\\\ \\^ \\$ \\. \\* \\+ \\? \\( \\) \\[ \\] \\{ \\} \\| \\- ",
                 "' \\ ^ $ . * + ? ( ) [ ] { } | -' -> ' \\\\ \\^ \\$ \\. \\* \\+ \\? \\( \\) \\[ \\] \\{ \\} \\| \\- '"
@@ -166,7 +153,6 @@ mocha.describe("Parsing Functions", () => {
     mocha.describe("getLineAndCol", () => {
         mocha.it("Empty string -> 0:0", () => {
             chai.assert.deepEqual(
-                // eslint-disable-next-line no-undefined
                 parse.getLineAndCol("", "fsgdfsgg"),
                 { line: 0, col: 0 },
                 "Empty string -> 0:0"
@@ -174,7 +160,6 @@ mocha.describe("Parsing Functions", () => {
         });
         mocha.it("Not found -> 0:0", () => {
             chai.assert.deepEqual(
-                // eslint-disable-next-line no-undefined
                 parse.getLineAndCol("A", "fsgdfsgg"),
                 { line: 0, col: 0 },
                 "Empty string -> 0:0"
@@ -182,7 +167,6 @@ mocha.describe("Parsing Functions", () => {
         });
         mocha.it("At position 0:4", () => {
             chai.assert.deepEqual(
-                // eslint-disable-next-line no-undefined
                 parse.getLineAndCol("o", "Hello World!"),
                 { line: 0, col: 4 },
                 "Hell_o_ World!"
@@ -190,7 +174,6 @@ mocha.describe("Parsing Functions", () => {
         });
         mocha.it("At position 2:14", () => {
             chai.assert.deepEqual(
-                // eslint-disable-next-line no-undefined
                 parse.getLineAndCol(
                     "to search",
                     "jkl\nhkkh\n01234567890123to search"
@@ -204,7 +187,6 @@ mocha.describe("Parsing Functions", () => {
     mocha.describe("parseDuneTests", () => {
         mocha.it("Empty string -> empty list", () => {
             chai.assert.deepEqual(
-                // eslint-disable-next-line no-undefined
                 parse.parseDuneTests(""),
                 [],
                 "Empty string -> empty list"
@@ -222,7 +204,6 @@ mocha.describe("Parsing Functions", () => {
         });
         mocha.it("dune test -> one test", () => {
             chai.assert.deepEqual(
-                // eslint-disable-next-line no-undefined
                 parse.parseDuneTests(duneTests.duneFile1),
                 duneTests.duneFile1Exe,
                 "dune test -> one test"
@@ -230,7 +211,6 @@ mocha.describe("Parsing Functions", () => {
         });
         mocha.it("dune tests -> 4 tests", () => {
             chai.assert.deepEqual(
-                // eslint-disable-next-line no-undefined
                 parse.parseDuneTests(duneTests.duneFile2),
                 duneTests.duneFile2Exe,
                 "duneFile2 -> duneFile2Exe"
@@ -238,7 +218,6 @@ mocha.describe("Parsing Functions", () => {
         });
         mocha.it("run %{exe:main.exe} -> main.exe", () => {
             chai.assert.deepEqual(
-                // eslint-disable-next-line no-undefined
                 parse.parseDuneTests(duneTests.duneFile3),
                 duneTests.duneFile3Exe,
                 "duneFile3 -> duneFile3Exe"
@@ -246,7 +225,6 @@ mocha.describe("Parsing Functions", () => {
         });
         mocha.it("run ./...exe -> 2 tests", () => {
             chai.assert.deepEqual(
-                // eslint-disable-next-line no-undefined
                 parse.parseDuneTests(duneTests.duneFile4),
                 duneTests.duneFile4Exe,
                 "duneFile4 -> duneFile4Exe"
@@ -257,7 +235,6 @@ mocha.describe("Parsing Functions", () => {
     mocha.describe("parseTestList", () => {
         mocha.it("Empty string -> empty list", () => {
             chai.assert.deepEqual(
-                // eslint-disable-next-line no-undefined
                 parse.parseTestList(""),
                 [],
                 "Empty string -> empty list"
@@ -265,7 +242,6 @@ mocha.describe("Parsing Functions", () => {
         });
         mocha.it("No test list string -> empty list", () => {
             chai.assert.deepEqual(
-                // eslint-disable-next-line no-undefined
                 parse.parseTestList("bfls bdsfbl bdfbs GT  dsjkafôdsafk"),
                 [],
                 "'bfls bdsfbl bdfbs GT  dsjkafôdsafk' -> empty list"
@@ -273,7 +249,6 @@ mocha.describe("Parsing Functions", () => {
         });
         mocha.it("Test list string -> list of test objects", () => {
             chai.assert.deepEqual(
-                // eslint-disable-next-line no-undefined
                 parse.parseTestList(testLists.normalList),
                 testLists.normalListObject,
                 "Test list 'normalList'"
@@ -283,7 +258,6 @@ mocha.describe("Parsing Functions", () => {
             "String of list of inline tests -> list of test objects",
             () => {
                 chai.assert.deepEqual(
-                    // eslint-disable-next-line no-undefined
                     parse.parseTestList(testLists.inlineList),
                     testLists.inlineListObject,
                     "Test list 'inlineList'"
@@ -295,7 +269,6 @@ mocha.describe("Parsing Functions", () => {
     mocha.describe("parseTestErrors", () => {
         mocha.it("Empty string -> empty list", () => {
             chai.assert.deepEqual(
-                // eslint-disable-next-line no-undefined
                 parse.parseTestErrors(""),
                 [],
                 "Empty string -> empty list"
@@ -303,7 +276,6 @@ mocha.describe("Parsing Functions", () => {
         });
         mocha.it("No test list string -> empty list", () => {
             chai.assert.deepEqual(
-                // eslint-disable-next-line no-undefined
                 parse.parseTestErrors("bfls bdsfbl bdfbs GT  dsjkafôdsafk"),
                 [],
                 "'bfls bdsfbl bdfbs GT  dsjkafôdsafk' -> empty list"
@@ -311,7 +283,6 @@ mocha.describe("Parsing Functions", () => {
         });
         mocha.it("Test error string -> list of test objects", () => {
             chai.assert.deepEqual(
-                // eslint-disable-next-line no-undefined
                 parse.parseTestErrors(testErrors.oneError),
                 testErrors.oneErrorObject,
                 "Test error 'oneError'"
@@ -319,7 +290,6 @@ mocha.describe("Parsing Functions", () => {
         });
         mocha.it("Test exception string -> list of test objects", () => {
             chai.assert.deepEqual(
-                // eslint-disable-next-line no-undefined
                 parse.parseTestErrors(testErrors.exceptionError),
                 testErrors.exceptionErrorObject,
                 "Test error 'exceptionError'"
@@ -327,7 +297,6 @@ mocha.describe("Parsing Functions", () => {
         });
         mocha.it("Test two errors string -> list of test objects", () => {
             chai.assert.deepEqual(
-                // eslint-disable-next-line no-undefined
                 parse.parseTestErrors(testErrors.twoErrors),
                 testErrors.twoErrorsObject,
                 "Test error 'twoErrors'"
@@ -335,7 +304,6 @@ mocha.describe("Parsing Functions", () => {
         });
         mocha.it("Test three errors string 1 -> list of test objects", () => {
             chai.assert.deepEqual(
-                // eslint-disable-next-line no-undefined
                 parse.parseTestErrors(testErrors.threeErrors1),
                 testErrors.threeErrorsObject,
                 "Test error 'threeErrors1'"
@@ -343,7 +311,6 @@ mocha.describe("Parsing Functions", () => {
         });
         mocha.it("Test three errors string 2 -> list of test objects", () => {
             chai.assert.deepEqual(
-                // eslint-disable-next-line no-undefined
                 parse.parseTestErrors(testErrors.threeErrors2),
                 testErrors.threeErrorsObject,
                 "Test error 'threeErrors2'"
@@ -351,7 +318,6 @@ mocha.describe("Parsing Functions", () => {
         });
         mocha.it("Inline test error string -> list of test objects", () => {
             chai.assert.deepEqual(
-                // eslint-disable-next-line no-undefined
                 parse.parseTestErrors(testErrors.oneErrorInline),
                 testErrors.oneErrorInlineObject,
                 "Test error 'oneErrorInline'"

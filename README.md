@@ -1,5 +1,7 @@
 # ![Alcotest logo](./images/alcotest-logo_rect.png) OCaml Alcotest Test Explorer for Visual Studio Code
 
+[![Lint](https://github.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter/actions/workflows/lint.yml/badge.svg)](https://github.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter/actions/workflows/lint.yml)
+
 This extension lets you run OCaml [Alcotests](<https://github.com/mirage/alcotest>) and [inline Alcotests](https://gitlab.com/gopiandcode/ppx-inline-alcotest) with the (native) Test Explorer UI.
 
 ## Getting started
@@ -20,7 +22,7 @@ Either
 
 ## Configuration
 
-- `alcotest.testDirectories` - Array of strings containing the relative paths (to the workspace root directory) to the test directories to search for dune configuration files. The default is `[ "test", "tests"]`
+- `alcotest.testDirectories` - Array of strings containing the relative (to the workspace root directory) paths to the test directories to search for dune configuration files. The default is `[ "test", "tests"]`
 
 ## Changes
 

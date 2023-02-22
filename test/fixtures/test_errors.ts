@@ -13,8 +13,6 @@
 
 import { TestType } from "../../src/parsing";
 
-/* eslint-disable max-lines */
-
 /**
  * This test failed because of an exception.
  *  * The error is: suite: 'AlOcaml', group: 'Environment Model tests', id: 4,

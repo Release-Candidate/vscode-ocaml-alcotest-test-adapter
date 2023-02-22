@@ -126,16 +126,8 @@ mocha.describe("I/O Functions", () => {
                 "spawn does-not-exist ENOENT",
                 "Not existing command name."
             );
-            chai.assert.isUndefined(
-                out.stdout,
-                // eslint-disable-next-line no-undefined
-                "No stdout, command not found"
-            );
-            chai.assert.isUndefined(
-                out.stderr,
-                // eslint-disable-next-line no-undefined
-                "No stderr, command not found"
-            );
+            chai.assert.isUndefined(out.stdout, "No stdout, command not found");
+            chai.assert.isUndefined(out.stderr, "No stderr, command not found");
         });
         mocha.it("Run ls on non existing file", async () => {
             const out = await io.runCommand(root, "ls", [
@@ -148,21 +140,13 @@ mocha.describe("I/O Functions", () => {
                 "ls on non existing file."
             );
             chai.assert.strictEqual(out.stdout, "", "No output at stdout!");
-            chai.assert.isUndefined(
-                out.error,
-                // eslint-disable-next-line no-undefined
-                "No error calling ls!"
-            );
+            chai.assert.isUndefined(out.error, "No error calling ls!");
         });
         mocha.it("Run ls on existing file LICENSE", async () => {
             const out = await io.runCommand(root, "ls", ["LICENSE"]);
             chai.assert.strictEqual(out.stdout, "LICENSE\n", "ls of LICENSE");
             chai.assert.strictEqual(out.stderr, "", "No output at stderr!");
-            chai.assert.isUndefined(
-                out.error,
-                // eslint-disable-next-line no-undefined
-                "No error calling ls!"
-            );
+            chai.assert.isUndefined(out.error, "No error calling ls!");
         });
         mocha.it("Output of `dune --version`", async () => {
             // eslint-disable-next-line array-bracket-newline
@@ -173,11 +157,7 @@ mocha.describe("I/O Functions", () => {
             chai.assert.isString(out.stdout, "Something like `3.6.2`");
             chai.assert.isNotEmpty(out.stdout, "Something like `3.6.2`");
             chai.assert.strictEqual(out.stderr, "", "No output at stderr!");
-            chai.assert.isUndefined(
-                out.error,
-                // eslint-disable-next-line no-undefined
-                "No error calling dune!"
-            );
+            chai.assert.isUndefined(out.error, "No error calling dune!");
         });
     });
 });

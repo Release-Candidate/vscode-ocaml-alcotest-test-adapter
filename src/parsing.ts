@@ -12,8 +12,6 @@
 
 import * as c from "./constants";
 
-/* eslint-disable max-lines */
-
 /**
  * Regexp to escape special regexp characters in strings.
  */

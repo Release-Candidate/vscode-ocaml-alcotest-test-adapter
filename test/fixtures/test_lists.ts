@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 /*
  * SPDX-License-Identifier: MIT
  * Copyright (C) 2023 Roland Csaszar

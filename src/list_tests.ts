@@ -16,8 +16,6 @@ import * as p from "./parsing";
 import * as vscode from "vscode";
 import path = require("path");
 
-/* eslint-disable max-lines */
-
 /**
  * Add all tests of all workspaces to the Test Explorer.
  * @param env The extension's environment.
