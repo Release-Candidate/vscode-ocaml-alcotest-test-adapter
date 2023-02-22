@@ -19,34 +19,19 @@ import path = require("path");
 /* eslint-disable max-lines */
 
 /**
- * Object holding additional data about a `TestItem`.
- */
-export type TestData = WeakMap<
-    vscode.TestItem,
-    {
-        runner: string;
-        root: vscode.WorkspaceFolder;
-        isInline: boolean;
-    }
->;
-
-/**
  * Add all tests of all workspaces to the Test Explorer.
  * @param env The extension's environment.
  */
-export async function addTests(env: {
-    config: vscode.WorkspaceConfiguration;
-    controller: vscode.TestController;
-    outChannel: vscode.OutputChannel;
-    testData: TestData;
-}) {
+export async function addTests(
+    env: h.Env,
+    roots: readonly vscode.WorkspaceFolder[]
+) {
     env.outChannel.appendLine("Adding tests ...");
-    const roots = h.workspaceFolders();
 
     const promises = [];
     for (const root of roots) {
         env.outChannel.appendLine(`Processing workspace ${root.name}`);
-        promises.push(addWorkspaceTests(root, env));
+        promises.push(addWorkspaceTests(env, root));
     }
 
     await Promise.allSettled(promises);
@@ -59,15 +44,7 @@ export async function addTests(env: {
  * @param root The workspace to add the tests from.
  * @param env Everything needed to add these tests.
  */
-async function addWorkspaceTests(
-    root: vscode.WorkspaceFolder,
-    env: {
-        config: vscode.WorkspaceConfiguration;
-        controller: vscode.TestController;
-        outChannel: vscode.OutputChannel;
-        testData: TestData;
-    }
-) {
+async function addWorkspaceTests(env: h.Env, root: vscode.WorkspaceFolder) {
     // eslint-disable-next-line no-extra-parens
     if (!(await h.isDuneWorking(root, env))) {
         return;
@@ -90,12 +67,7 @@ async function addWorkspaceTests(
  * Explorer.
  */
 async function addNormalTests(
-    env: {
-        config: vscode.WorkspaceConfiguration;
-        controller: vscode.TestController;
-        outChannel: vscode.OutputChannel;
-        testData: TestData;
-    },
+    env: h.Env,
     root: vscode.WorkspaceFolder,
     workspaceItem: vscode.TestItem
 ) {
@@ -162,12 +134,7 @@ async function parseDuneFiles(
  * @param workspaceItem The parent of the test tree in the Test Explorer view.
  */
 async function addInlineTests(
-    env: {
-        config: vscode.WorkspaceConfiguration;
-        controller: vscode.TestController;
-        outChannel: vscode.OutputChannel;
-        testData: TestData;
-    },
+    env: h.Env,
     root: vscode.WorkspaceFolder,
     workspaceItem: vscode.TestItem
 ) {
@@ -190,12 +157,7 @@ async function addInlineTests(
  * @param data The data needed to generate the test tree.
  */
 async function generateTestList(
-    env: {
-        config: vscode.WorkspaceConfiguration;
-        controller: vscode.TestController;
-        outChannel: vscode.OutputChannel;
-        testData: TestData;
-    },
+    env: h.Env,
     data: {
         runnerPaths: string[];
         root: vscode.WorkspaceFolder;
@@ -228,12 +190,7 @@ async function generateTestList(
  * @param data The data needed to add the test item to the tree.
  */
 async function parseTestListOutput(
-    env: {
-        config: vscode.WorkspaceConfiguration;
-        controller: vscode.TestController;
-        outChannel: vscode.OutputChannel;
-        testData: TestData;
-    },
+    env: h.Env,
     data: {
         root: vscode.WorkspaceFolder;
         workspaceItem: vscode.TestItem;
@@ -279,11 +236,7 @@ async function parseTestListOutput(
  * @param data The data needed to add the test item to the tree.
  */
 function addTestItem(
-    env: {
-        controller: vscode.TestController;
-        outChannel: vscode.OutputChannel;
-        testData: TestData;
-    },
+    env: h.Env,
     data: {
         t: p.TestType;
         sourcePath: vscode.Uri;
@@ -302,6 +255,7 @@ function addTestItem(
     env.testData.set(testItem, {
         root: data.root,
         runner: data.rPath,
+        group: data.groupItem.id,
         isInline: data.suiteLabel === c.inlineTestsLabel,
     });
 }
@@ -322,6 +276,14 @@ export function testList(
 ) {
     const tests: vscode.TestItem[] = [];
 
+    if (request.include) {
+        request.include.forEach((t) => tests.push(...testAndChilds(t)));
+    } else {
+        controller.items.forEach((t) => tests.push(...testAndChilds(t)));
+    }
+
+    return tests.filter((t) => !request.exclude?.includes(t));
+
     /**
      * Return a list of a test and its children, if it has any.
      * @param t The test to check for children.
@@ -337,12 +299,4 @@ export function testList(
 
         return testNChilds;
     }
-
-    if (request.include) {
-        request.include.forEach((t) => tests.push(...testAndChilds(t)));
-    } else {
-        controller.items.forEach((t) => tests.push(...testAndChilds(t)));
-    }
-
-    return tests.filter((t) => !request.exclude?.includes(t));
 }

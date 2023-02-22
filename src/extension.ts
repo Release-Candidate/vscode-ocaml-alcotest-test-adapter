@@ -13,15 +13,13 @@
  */
 
 import * as c from "./constants";
-import * as helpers from "./extension_helpers";
+import * as h from "./extension_helpers";
 import * as io from "./osInteraction";
 import * as p from "./parsing";
 import * as t from "./list_tests";
 import * as vscode from "vscode";
 
 /* eslint-disable no-extra-parens */
-
-// TODO: workspace.onDidChangeWorkspaceFolders
 
 /**
  * Called when the extension is being activated.
@@ -55,7 +53,7 @@ async function setupExtension(
     context: vscode.ExtensionContext,
     outChannel: vscode.OutputChannel
 ) {
-    const testData: t.TestData = new WeakMap();
+    const testData: h.TestData = new WeakMap();
 
     const config = vscode.workspace.getConfiguration(c.cfgSection);
 
@@ -73,7 +71,18 @@ async function setupExtension(
     );
     context.subscriptions.push(runProfile);
 
-    await t.addTests({ config, controller, outChannel, testData });
+    const disposable = vscode.workspace.onDidChangeWorkspaceFolders(
+        async (e) => {
+            t.addTests({ config, controller, outChannel, testData }, e.added);
+            e.removed.map((r) => controller.items.delete(r.name));
+        }
+    );
+    context.subscriptions.push(disposable);
+
+    await t.addTests(
+        { config, controller, outChannel, testData },
+        h.workspaceFolders()
+    );
 }
 
 /**
@@ -85,12 +94,7 @@ async function setupExtension(
  * test runs.
  */
 async function runHandler(
-    env: {
-        config: vscode.WorkspaceConfiguration;
-        controller: vscode.TestController;
-        outChannel: vscode.OutputChannel;
-        testData: t.TestData;
-    },
+    env: h.Env,
     request: vscode.TestRunRequest,
     token: vscode.CancellationToken
 ) {
@@ -121,16 +125,7 @@ async function runHandler(
  * @param env The environment needed to run a test.
  * @param test The test to run.
  */
-async function runSingleTest(
-    env: {
-        config: vscode.WorkspaceConfiguration;
-        controller: vscode.TestController;
-        outChannel: vscode.OutputChannel;
-        testData: t.TestData;
-        run: vscode.TestRun;
-    },
-    test: vscode.TestItem
-) {
+async function runSingleTest(env: h.Env, test: vscode.TestItem) {
     const ret = env.testData.get(test);
     env.outChannel.appendLine(
         `Running test "${test.parent ? test.parent.label : ""}   ${
@@ -149,7 +144,7 @@ async function runSingleTest(
         await parseTestResult(env, { out, startTime, test });
         // eslint-disable-next-line require-atomic-updates
         test.busy = false;
-        env.run.appendOutput(`${out.stdout?.replace(/\n/gu, "\r\n")}`);
+        env.run?.appendOutput(`${out.stdout?.replace(/\n/gu, "\r\n")}`);
     }
 }
 
@@ -160,13 +155,7 @@ async function runSingleTest(
  * @param data The data to parse and construct the test result.
  */
 async function parseTestResult(
-    env: {
-        config: vscode.WorkspaceConfiguration;
-        controller: vscode.TestController;
-        outChannel: vscode.OutputChannel;
-        testData: t.TestData;
-        run: vscode.TestRun;
-    },
+    env: h.Env,
     data: {
         out: io.Output;
         startTime: number;
@@ -191,7 +180,7 @@ async function parseTestResult(
     if (errElem) {
         await setTestError(env, data, errElem);
     } else {
-        env.run.passed(data.test, Date.now() - data.startTime);
+        env.run?.passed(data.test, Date.now() - data.startTime);
     }
 }
 
@@ -202,26 +191,18 @@ async function parseTestResult(
  * @param errElem The test that produced the error.
  */
 async function setTestError(
-    env: {
-        config: vscode.WorkspaceConfiguration;
-        controller: vscode.TestController;
-        outChannel: vscode.OutputChannel;
-        testData: t.TestData;
-        run: vscode.TestRun;
-    },
+    env: h.Env,
     data: { out: io.Output; startTime: number; test: vscode.TestItem },
     errElem: p.TestType
 ) {
     data.test.label = errElem.name;
-    let message = await constructMessage(
-        {
-            txt: data.out.stdout ? data.out.stdout : "",
-            test: data.test,
-            testData: env.testData,
-        },
-        errElem
-    );
-    env.run.failed(data.test, message, Date.now() - data.startTime);
+    let message = await constructMessage({
+        txt: data.out.stdout ? data.out.stdout : "",
+        test: data.test,
+        testData: env.testData,
+        errElem,
+    });
+    env.run?.failed(data.test, message, Date.now() - data.startTime);
 }
 
 /**
@@ -231,18 +212,11 @@ async function setTestError(
  * @param msg The error message.
  * @param test The test that produced the error.
  */
-async function setRunnerError(
-    env: {
-        testData: t.TestData;
-        run: vscode.TestRun;
-    },
-    msg: string,
-    test: vscode.TestItem
-) {
+async function setRunnerError(env: h.Env, msg: string, test: vscode.TestItem) {
     const mess = new vscode.TestMessage(msg);
     const loc = await setSourceLocation(test, env.testData);
     mess.location = loc;
-    env.run.errored(test, mess);
+    env.run?.errored(test, mess);
 }
 
 /**
@@ -253,21 +227,19 @@ async function setRunnerError(
  * @returns A `TestMessage` object filled with the information of the failed
  * test.
  */
-async function constructMessage(
-    data: {
-        txt: string;
-        test: vscode.TestItem;
-        testData: t.TestData;
-    },
-    errElem: p.TestType
-) {
+async function constructMessage(data: {
+    txt: string;
+    test: vscode.TestItem;
+    testData: h.TestData;
+    errElem: p.TestType;
+}) {
     let message = new vscode.TestMessage(data.txt);
     const loc = await setSourceLocation(data.test, data.testData);
     if (loc) {
         message.location = loc;
     }
-    message.actualOutput = errElem.actual;
-    message.expectedOutput = errElem.expected;
+    message.actualOutput = data.errElem.actual;
+    message.expectedOutput = data.errElem.expected;
     return message;
 }
 
@@ -276,12 +248,12 @@ async function constructMessage(
  * @param data The data needed to get the source location.
  * @returns A `Location` of the error or `undefined`.
  */
-async function setSourceLocation(test: vscode.TestItem, testData: t.TestData) {
+async function setSourceLocation(test: vscode.TestItem, testData: h.TestData) {
     if (test.uri) {
         const textData = await vscode.workspace.fs.readFile(test.uri);
         const ret = testData.get(test);
         const regexPref = ret?.isInline ? c.inlineTestPrefix + '"' : '"';
-        const loc = helpers.getPosition(
+        const loc = h.getPosition(
             regexPref + p.escapeRegex(test.label),
             textData.toString()
         );

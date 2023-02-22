@@ -15,6 +15,30 @@ import * as vscode from "vscode";
 import { getLineAndCol } from "./parsing";
 
 /**
+ * Object holding additional data about a `TestItem`.
+ */
+export type TestData = WeakMap<
+    vscode.TestItem,
+    {
+        runner: string;
+        root: vscode.WorkspaceFolder;
+        group: string;
+        isInline: boolean;
+    }
+>;
+
+/**
+ * Object containing the extension's environment.
+ */
+export type Env = {
+    config: vscode.WorkspaceConfiguration;
+    controller: vscode.TestController;
+    outChannel: vscode.OutputChannel;
+    testData: TestData;
+    run?: vscode.TestRun;
+};
+
+/**
  * Return the list of currently opened workspace folders, and an empty list `[]`
  *  if no workspace (that includes a folder) has been opened.
  * @returns The list ('or' an empty list `[]`) of currently opened workspace
