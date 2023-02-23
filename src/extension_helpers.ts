@@ -16,6 +16,8 @@ import { getLineAndCol } from "./parsing";
 
 /**
  * Object holding additional data about a `TestItem`.
+ * The advantage of a `WeakMap` is the automatic garbage collection of garbage
+ * collected key objects. No need to explicitly delete objects.
  */
 export type TestData = WeakMap<
     vscode.TestItem,
@@ -46,6 +48,39 @@ export type Env = {
  */
 export function workspaceFolders() {
     return vscode.workspace.workspaceFolders || [];
+}
+
+export function testItemsToWorkspaces(items: vscode.TestItem[]) {
+    const wFolders = workspaceFolders();
+    const workspaces = items
+        .map(onlyWorkspaces)
+        .sort((i, j) => i.id.localeCompare(j.id))
+        // eslint-disable-next-line no-magic-numbers
+        .filter((v, idx, arr) => v.id !== arr.at(idx + 1)?.id)
+        .map(
+            (v) =>
+                wFolders.find(
+                    (w) => `${w.name}` === v.id
+                ) as vscode.WorkspaceFolder
+        );
+
+    return workspaces;
+
+    /**
+     * Return the workspaces containing the tests.
+     * @param i The `TestItem` to process.
+     * @returns The workspaces containing the tests.
+     */
+    function onlyWorkspaces(i: vscode.TestItem) {
+        if (i.parent?.parent?.parent) {
+            return i.parent.parent.parent;
+        } else if (i.parent?.parent) {
+            return i.parent.parent;
+        } else if (i.parent) {
+            return i.parent;
+        }
+        return i;
+    }
 }
 
 /**

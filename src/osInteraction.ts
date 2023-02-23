@@ -94,17 +94,71 @@ export async function existsIsFile(uri: vscode.Uri) {
     }
 }
 
-// eslint-disable-next-line max-statements
-export async function findSourceToTest(
+/**
+ * Search for files containing the tests from group `groupname`.
+ * @param root The workspace root directory to use to search for source files.
+ * @param testDirs The list of test directories to search for test source files.
+ * @param groupName The name of the test group. this is the filename of the test
+ * sources for inline tests.
+ * @returns The `Uri` of the sources to test group `groupname` on success or the
+ * empty URI `""` if no source file could be found.
+ */
+export async function findSourceOfTest(
     root: vscode.WorkspaceFolder,
     testDirs: string[],
     groupName: string
 ) {
-    const option1 = await findFilesRelative(root, groupName);
+    const possibleInline = await findInlineSources(root, groupName);
+    if (possibleInline) {
+        return possibleInline;
+    }
+
+    const possibleTestSources = await findInTestSources(
+        root,
+        testDirs,
+        groupName
+    );
+    if (possibleTestSources) {
+        return possibleTestSources;
+    }
+
+    return vscode.Uri.file("");
+}
+
+/**
+ * Search for file with filename `fileName` in directory `root`.
+ * Return `undefined` if no such file has been found.
+ * @param root The root of the workspace to search in.
+ * @param fileName The filename of the source file containing the inline tests.
+ * @returns The `Uri` of the found file on success, `undefined` else.
+ */
+async function findInlineSources(
+    root: vscode.WorkspaceFolder,
+    fileName: string
+) {
+    const option1 = await findFilesRelative(root, fileName);
     if (option1.length > 0) {
         return vscode.Uri.joinPath(root.uri, option1[0]);
     }
 
+    // eslint-disable-next-line no-undefined
+    return undefined;
+}
+
+/**
+ * Search for test group `groupName` in source files of the test directories
+ * `testDirs`.
+ * `testDirs` shall be relative paths in `root`.
+ * @param root The root of the workspace to search in.
+ * @param testDirs The test directories to search in. Relative paths in `root`.
+ * @param groupName The name of the test group to search for.
+ * @returns The `Uri` of a source file on success, `undefined` else.
+ */
+async function findInTestSources(
+    root: vscode.WorkspaceFolder,
+    testDirs: string[],
+    groupName: string
+) {
     for await (const pathTestDir of testDirs) {
         const option2 = await findFilesRelative(
             root,
@@ -121,8 +175,8 @@ export async function findSourceToTest(
             }
         }
     }
-
-    return vscode.Uri.file("");
+    // eslint-disable-next-line no-undefined
+    return undefined;
 }
 
 /**
@@ -181,7 +235,6 @@ export async function runCommand(
         await Promise.race([checkCmd, exitCode]);
         return { stdout: out, stderr: err };
     } catch (error) {
-        // eslint-disable-next-line no-extra-parens
         return { error: (error as Error).message };
     }
 }

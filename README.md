@@ -22,7 +22,7 @@ Either
 
 ## Configuration
 
-- `alcotest.testDirectories` - Array of strings containing the relative (to the workspace root directory) paths to the test directories to search for dune configuration files. The default is `[ "test", "tests"]`
+- `alcotest.testDirectories` - Array of strings containing the relative (to the workspace root directory) paths to the test directories to search for dune configuration files. The default is `[ "test", "tests"]`. If your dune test configuration files are contained other directories, add these directories to this list.
 
 ## Changes
 

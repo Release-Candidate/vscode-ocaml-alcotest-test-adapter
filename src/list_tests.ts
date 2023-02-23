@@ -7,7 +7,8 @@
  * Date:     16.Feb.2023
  *
  * ==============================================================================
- * Everything to add or run tests.
+ * Everything to add tests to the Test Explorer tree from the output of an
+ * Alcotest list of tests.
  */
 import * as c from "./constants";
 import * as h from "./extension_helpers";
@@ -43,7 +44,7 @@ export async function addTests(
  * @param env Everything needed to add these tests.
  */
 async function addWorkspaceTests(env: h.Env, root: vscode.WorkspaceFolder) {
-    // eslint-disable-next-line no-extra-parens
+    // eslint-disable-next-line @typescript-eslint/no-extra-parens
     if (!(await h.isDuneWorking(root, env))) {
         return;
     }
@@ -78,7 +79,7 @@ async function addNormalTests(
     );
     const duneFiles: string[] = [];
     for await (const glob of duneGlobs) {
-        // eslint-disable-next-line no-extra-parens
+        // eslint-disable-next-line @typescript-eslint/no-extra-parens
         duneFiles.push(...(await io.findFilesRelative(root, glob)));
     }
     const runnerPaths: string[] = await parseDuneFiles(
@@ -204,7 +205,7 @@ async function parseTestListOutput(
     data.workspaceItem.children.add(suiteItem);
     const groups = p.parseTestList(data.listOutput);
     for await (const group of groups) {
-        const sourcePath = await io.findSourceToTest(
+        const sourcePath = await io.findSourceOfTest(
             data.root,
             c.getCfgTestDirs(env.config),
             group.name
