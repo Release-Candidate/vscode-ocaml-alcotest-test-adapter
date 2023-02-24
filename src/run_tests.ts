@@ -30,7 +30,6 @@ export async function runHandler(
     token: vscode.CancellationToken
 ) {
     const toDelete = await checkForNewTests(env, request);
-
     const run = env.controller.createTestRun(request);
     const tests = t.testList(request, env.controller, toDelete);
 

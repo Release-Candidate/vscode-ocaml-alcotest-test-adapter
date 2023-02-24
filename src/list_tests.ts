@@ -20,6 +20,8 @@ import path = require("path");
 /**
  * Add all tests of all workspaces to the Test Explorer.
  * @param env The extension's environment.
+ * @returns The list of `TestItems` that have been deleted from the Test
+ * Explorer tree.
  */
 export async function addTests(
     env: h.Env,
@@ -47,6 +49,8 @@ export async function addTests(
  * Add all tests of a single workspace `root` to the Test Explorer.
  * @param root The workspace to add the tests from.
  * @param env Everything needed to add these tests.
+ * @returns The list of `TestItems` that have been deleted from the Test
+ * Explorer tree.
  */
 async function addWorkspaceTests(env: h.Env, root: vscode.WorkspaceFolder) {
     // eslint-disable-next-line @typescript-eslint/no-extra-parens
@@ -88,6 +92,8 @@ async function addWorkspaceTests(env: h.Env, root: vscode.WorkspaceFolder) {
  * @param root The workspace to add the tests to and from.
  * @param workspaceItem The parent node of the workspace's test tree in the Test
  * Explorer.
+ * @returns The list of `TestItems` that have been deleted from the Test
+ * Explorer tree.
  */
 async function addNormalTests(
     env: h.Env,
@@ -124,6 +130,8 @@ async function addNormalTests(
  * @param env Everything needed to add these tests.
  * @param root The workspace to add the tests to and from.
  * @param workspaceItem The parent of the test tree in the Test Explorer view.
+ * @returns The list of `TestItems` that have been deleted from the Test
+ * Explorer tree.
  */
 async function addInlineTests(
     env: h.Env,
@@ -179,6 +187,8 @@ async function parseDuneFiles(
  * test runners.
  * @param env The environment to generate the tree of tests.
  * @param data The data needed to generate the test tree.
+ * @returns The list of `TestItems` that have been deleted from the Test
+ * Explorer tree.
  */
 async function generateTestList(
     env: h.Env,
@@ -219,6 +229,8 @@ async function generateTestList(
  * Parse the output of the test list and add the test items to the test tree.
  * @param env The environment needed to add the tests.
  * @param data The data needed to add the test item to the tree.
+ * @returns The list of `TestItems` that have been deleted from the Test
+ * Explorer tree.
  */
 async function parseTestListOutput(
     env: h.Env,
@@ -274,6 +286,8 @@ async function parseTestListOutput(
  * @param env The Extension's environment.
  * @param group The test group to check for deleted items.
  * @param groupItem The `TestItem` of `group`.
+ * @returns The list of `TestItems` that have been deleted from the Test
+ * Explorer tree.
  */
 function deleteNonExisting(
     group: { name: string; tests: p.TestType[] },
@@ -339,7 +353,7 @@ async function addTestItem(
  * If it does already exist, just update its name. If it does not yet exist,
  * create a new `TestItem` and return that.
  * @param data The needed data.
- * @returns
+ * @returns The existing or created `TestItem`.
  */
 function getTestItem(data: {
     controller: vscode.TestController;
@@ -372,6 +386,8 @@ function getTestItem(data: {
  * @param request The request which may hold a list of tests (`TestItem`s) to
  * run.
  * @param controller Holding all existing `TestItem`s.
+ * @param toDelete The list of deleted `TestItems`, don't add these to the tests
+ * to run.
  * @returns The list of tests to run.
  */
 export function testList(
