@@ -71,6 +71,11 @@ click on `Go To Test` to the right of a failed test in the test explorer and the
 or hover over the [Error Lens](https://marketplace.visualstudio.com/items?itemName=usernamehw.errorlens) output in the source file - this preview is too narrow, so the test output is mangled.
 ![HOver over the Error Lens text](https://raw.githubusercontent.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter/main/images/hover_error_lens.png)
 
+Q: What does the red circle with a point in the middle mean?
+
+![Compile error](https://raw.githubusercontent.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter/main/images/compile_error.png)
+A: That means that dune returned an error (not a failed test). Mostly because of code that does not compile.
+
 Q: Where can I see the log of the extension?
 
 ![Output tab of Alcotest Extension](https://raw.githubusercontent.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter/main/images/output.png)
