@@ -25,7 +25,7 @@ export async function addTests(
     env: h.Env,
     roots: readonly vscode.WorkspaceFolder[]
 ) {
-    env.outChannel.appendLine("Adding tests ...");
+    env.outChannel.appendLine("Adding new tests ...");
 
     const promises = [];
     for (const root of roots) {
@@ -33,9 +33,14 @@ export async function addTests(
         promises.push(addWorkspaceTests(env, root));
     }
 
-    await Promise.allSettled(promises);
+    const toDeleteArray = await Promise.allSettled(promises);
 
-    env.outChannel.appendLine("Finished adding tests.");
+    env.outChannel.appendLine("Finished adding new tests.");
+
+    // eslint-disable-next-line no-magic-numbers, arrow-body-style
+    return toDeleteArray.flatMap((e) => {
+        return e.status === "fulfilled" ? e.value : [];
+    });
 }
 
 /**
@@ -46,16 +51,35 @@ export async function addTests(
 async function addWorkspaceTests(env: h.Env, root: vscode.WorkspaceFolder) {
     // eslint-disable-next-line @typescript-eslint/no-extra-parens
     if (!(await h.isDuneWorking(root, env))) {
-        return;
+        return [];
     }
-    const workspaceItem = env.controller.createTestItem(
-        root.name,
-        `Workspace: ${root.name}`,
-        root.uri
-    );
+
+    const workspaceItem = getWorkspaceItem();
     env.controller.items.add(workspaceItem);
-    await addInlineTests(env, root, workspaceItem);
-    await addNormalTests(env, root, workspaceItem);
+    const toDelete: vscode.TestItem[] = [];
+    // eslint-disable-next-line @typescript-eslint/no-extra-parens
+    toDelete.push(...(await addInlineTests(env, root, workspaceItem)));
+    // eslint-disable-next-line @typescript-eslint/no-extra-parens
+    toDelete.push(...(await addNormalTests(env, root, workspaceItem)));
+
+    return toDelete;
+
+    /**
+     * Return the `TestItem` of the current workspace if it does exist or create
+     * it.
+     */
+    function getWorkspaceItem() {
+        const item = env.controller.items.get(root.name);
+        if (item) {
+            return item;
+        }
+
+        return env.controller.createTestItem(
+            root.name,
+            `Workspace: ${root.name}`,
+            root.uri
+        );
+    }
 }
 
 /**
@@ -78,8 +102,8 @@ async function addNormalTests(
         d.concat("/**/").concat(c.duneFileName)
     );
     const duneFiles: string[] = [];
-    for await (const glob of duneGlobs) {
-        // eslint-disable-next-line @typescript-eslint/no-extra-parens
+    for (const glob of duneGlobs) {
+        // eslint-disable-next-line @typescript-eslint/no-extra-parens, no-await-in-loop
         duneFiles.push(...(await io.findFilesRelative(root, glob)));
     }
     const runnerPaths: string[] = await parseDuneFiles(
@@ -87,11 +111,34 @@ async function addNormalTests(
         env.outChannel,
         root
     );
-    await generateTestList(env, {
+    return generateTestList(env, {
         root,
         runnerPaths,
         workspaceItem,
         suiteLabel: c.testControllerLabel,
+    });
+}
+
+/**
+ * Add all inline (PPX) test of the workspace `root`.
+ * @param env Everything needed to add these tests.
+ * @param root The workspace to add the tests to and from.
+ * @param workspaceItem The parent of the test tree in the Test Explorer view.
+ */
+async function addInlineTests(
+    env: h.Env,
+    root: vscode.WorkspaceFolder,
+    workspaceItem: vscode.TestItem
+) {
+    const inlineRunnerPaths = await io.findFilesRelative(root, c.runnerExeGlob);
+    const justBuildPaths = inlineRunnerPaths.filter(
+        (pa) => !pa.includes(c.sandboxDir)
+    );
+    return generateTestList(env, {
+        runnerPaths: justBuildPaths,
+        root,
+        workspaceItem,
+        suiteLabel: c.inlineTestsLabel,
     });
 }
 
@@ -111,8 +158,9 @@ async function parseDuneFiles(
     root: vscode.WorkspaceFolder
 ) {
     const runnerPaths: string[] = [];
-    for await (const df of duneFiles) {
+    for (const df of duneFiles) {
         outChannel.appendLine(`Checking dune file '${df}'`);
+        // eslint-disable-next-line no-await-in-loop
         const bytes = await vscode.workspace.fs.readFile(
             vscode.Uri.joinPath(root.uri, df)
         );
@@ -124,29 +172,6 @@ async function parseDuneFiles(
         );
     }
     return runnerPaths;
-}
-
-/**
- * Add all inline (PPX) test of the workspace `root`.
- * @param env Everything needed to add these tests.
- * @param root The workspace to add the tests to and from.
- * @param workspaceItem The parent of the test tree in the Test Explorer view.
- */
-async function addInlineTests(
-    env: h.Env,
-    root: vscode.WorkspaceFolder,
-    workspaceItem: vscode.TestItem
-) {
-    const inlineRunnerPaths = await io.findFilesRelative(root, c.runnerExeGlob);
-    const justBuildPaths = inlineRunnerPaths.filter(
-        (pa) => !pa.includes(c.sandboxDir)
-    );
-    await generateTestList(env, {
-        runnerPaths: justBuildPaths,
-        root,
-        workspaceItem,
-        suiteLabel: c.inlineTestsLabel,
-    });
 }
 
 /**
@@ -164,23 +189,30 @@ async function generateTestList(
         suiteLabel: string;
     }
 ) {
-    for await (const rPath of data.runnerPaths) {
+    const toDelete: vscode.TestItem[] = [];
+    for (const rPath of data.runnerPaths) {
+        // eslint-disable-next-line no-await-in-loop
         const out = await io.runRunnerListDune(data.root, rPath);
         env.outChannel.appendLine(
             `Test runner: ${rPath}\nList of tests:\n${out.stdout}\nStderr: ${
                 out.stderr
             }\nError: ${out.error ? out.error : ""}`
         );
+
         if (out.stdout) {
-            await parseTestListOutput(env, {
-                root: data.root,
-                suiteLabel: data.suiteLabel,
-                workspaceItem: data.workspaceItem,
-                listOutput: out.stdout,
-                rPath,
-            });
+            toDelete.push(
+                // eslint-disable-next-line @typescript-eslint/no-extra-parens, no-await-in-loop
+                ...(await parseTestListOutput(env, {
+                    root: data.root,
+                    suiteLabel: data.suiteLabel,
+                    workspaceItem: data.workspaceItem,
+                    listOutput: out.stdout,
+                    rPath,
+                }))
+            );
         }
     }
+    return toDelete;
 }
 
 /**
@@ -198,24 +230,28 @@ async function parseTestListOutput(
         rPath: string;
     }
 ) {
-    const suiteItem = env.controller.createTestItem(
-        data.suiteLabel,
-        data.suiteLabel
-    );
-    data.workspaceItem.children.add(suiteItem);
+    const suiteItem = getTestItem({
+        controller: env.controller,
+        parent: data.workspaceItem,
+        id: data.suiteLabel,
+        label: data.suiteLabel,
+    });
+    const toDelete: vscode.TestItem[] = [];
     const groups = p.parseTestList(data.listOutput);
-    for await (const group of groups) {
+    for (const group of groups) {
+        // eslint-disable-next-line no-await-in-loop
         const sourcePath = await io.findSourceOfTest(
             data.root,
             c.getCfgTestDirs(env.config),
             group.name
         );
-        const groupItem = env.controller.createTestItem(
-            group.name,
-            group.name,
-            sourcePath
-        );
-        suiteItem.children.add(groupItem);
+        const groupItem = getTestItem({
+            controller: env.controller,
+            parent: suiteItem,
+            id: group.name,
+            label: group.name,
+            uri: sourcePath,
+        });
         for (const t of group.tests) {
             addTestItem(env, {
                 t,
@@ -226,15 +262,46 @@ async function parseTestListOutput(
                 rPath: data.rPath,
             });
         }
+
+        toDelete.push(...deleteNonExisting(group, groupItem, env));
     }
+
+    return toDelete;
 }
 
 /**
- * Add a single test item to the Test Explorer tree.
+ * Removes all deleted tests from the test tree.
+ * @param env The Extension's environment.
+ * @param group The test group to check for deleted items.
+ * @param groupItem The `TestItem` of `group`.
+ */
+function deleteNonExisting(
+    group: { name: string; tests: p.TestType[] },
+    groupItem: vscode.TestItem,
+    env: h.Env
+) {
+    const toDelete: vscode.TestItem[] = [];
+    const maxID = group.tests.reduce((acc, e) => (e.id > acc ? e.id : acc), 0);
+
+    groupItem.children.forEach((e) => {
+        if (parseInt(e.id, 10) > maxID) {
+            toDelete.push(e);
+            env.outChannel.appendLine(
+                `Group: ${group.name} Deleting test ${e.label} ${e.id}`
+            );
+            groupItem.children.delete(`${e.id}`);
+        }
+    });
+
+    return toDelete;
+}
+
+/**
+ * Add or update a single test item to the Test Explorer tree.
  * @param env The environment needed to add the test.
  * @param data The data needed to add the test item to the tree.
  */
-function addTestItem(
+async function addTestItem(
     env: h.Env,
     data: {
         t: p.TestType;
@@ -245,18 +312,56 @@ function addTestItem(
         rPath: string;
     }
 ) {
-    const testItem = env.controller.createTestItem(
-        `${data.t.id}`,
-        data.t.name,
-        data.sourcePath
-    );
-    data.groupItem.children.add(testItem);
-    env.testData.set(testItem, {
-        root: data.root,
-        runner: data.rPath,
-        group: data.groupItem.id,
-        isInline: data.suiteLabel === c.inlineTestsLabel,
+    const testItem = getTestItem({
+        controller: env.controller,
+        parent: data.groupItem,
+        id: `${data.t.id}`,
+        label: data.t.name,
+        uri: data.sourcePath,
     });
+
+    if (!env.testData.get(testItem)) {
+        env.testData.set(testItem, {
+            root: data.root,
+            runner: data.rPath,
+            group: data.groupItem.id,
+            isInline: data.suiteLabel === c.inlineTestsLabel,
+        });
+    }
+    const loc = await h.setSourceLocation(testItem, env.testData);
+    if (loc) {
+        testItem.range = loc.range;
+    }
+}
+
+/**
+ * Return the `TestItem` with id `data.id`.
+ * If it does already exist, just update its name. If it does not yet exist,
+ * create a new `TestItem` and return that.
+ * @param data The needed data.
+ * @returns
+ */
+function getTestItem(data: {
+    controller: vscode.TestController;
+    parent: vscode.TestItem;
+    id: string;
+    label: string;
+    uri?: vscode.Uri;
+}) {
+    let item = data.parent.children.get(data.id);
+    if (item) {
+        item.label = data.label;
+        return item;
+    }
+
+    if (data.uri) {
+        item = data.controller.createTestItem(data.id, data.label, data.uri);
+    } else {
+        item = data.controller.createTestItem(data.id, data.label);
+    }
+    data.parent.children.add(item);
+
+    return item;
 }
 
 /**
@@ -271,7 +376,8 @@ function addTestItem(
  */
 export function testList(
     request: vscode.TestRunRequest,
-    controller: vscode.TestController
+    controller: vscode.TestController,
+    toDelete: vscode.TestItem[]
 ) {
     const tests: vscode.TestItem[] = [];
 
@@ -292,7 +398,7 @@ export function testList(
         const testNChilds: vscode.TestItem[] = [];
         if (t.children?.size > 0) {
             t.children.forEach((el) => testNChilds.push(...testAndChilds(el)));
-        } else {
+        } else if (!toDelete.find((e) => e === t)) {
             testNChilds.push(t);
         }
 

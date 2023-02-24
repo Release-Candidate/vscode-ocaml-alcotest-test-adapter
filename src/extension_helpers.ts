@@ -10,9 +10,10 @@
  * Helper functions to deal with the extension API.
  */
 
+import * as c from "./constants";
 import * as io from "./osInteraction";
+import * as p from "./parsing";
 import * as vscode from "vscode";
-import { getLineAndCol } from "./parsing";
 
 /**
  * Object holding additional data about a `TestItem`.
@@ -91,8 +92,37 @@ export function testItemsToWorkspaces(items: vscode.TestItem[]) {
  * @returns The first position of `s` in `text`.
  */
 export function getPosition(s: string, text: string) {
-    const loc = getLineAndCol(s, text);
+    const loc = p.getLineAndCol(s, text);
     return new vscode.Position(loc.line, loc.col);
+}
+
+/**
+ * Return the start and end line and column of the test in a source file.
+ * @param data The data needed to get the source location.
+ * @returns A `Location` containing a `Range` of the error or `undefined`.
+ */
+export async function setSourceLocation(
+    test: vscode.TestItem,
+    testData: TestData
+) {
+    if (test.uri) {
+        const textData = await vscode.workspace.fs.readFile(test.uri);
+        const ret = testData.get(test);
+        const regexPref = ret?.isInline ? c.inlineTestPrefix + '"' : '"';
+        const startLoc = getPosition(
+            regexPref + p.escapeRegex(test.label),
+            textData.toString()
+        );
+        const searchString = regexPref + test.label;
+        const endLoc = new vscode.Position(
+            startLoc.line,
+            startLoc.character + searchString.length
+        );
+        const errorRange = new vscode.Range(startLoc, endLoc);
+        return new vscode.Location(test.uri, errorRange);
+    }
+    // eslint-disable-next-line no-undefined
+    return undefined;
 }
 
 /**

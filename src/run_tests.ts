@@ -7,14 +7,52 @@
  * Date:     23.Feb.2023
  *
  * ==============================================================================
+ * Run the tests that are being requested by the user.
  */
 
-import * as c from "./constants";
 import * as h from "./extension_helpers";
 import * as io from "./osInteraction";
 import * as p from "./parsing";
 import * as t from "./list_tests";
 import * as vscode from "vscode";
+
+/**
+ * Run or cancel running tests.
+ * This is called whenever the user wants to run or cancel tests.
+ * @param env All needed objects are contained in this environment.
+ * @param request The actual run request.
+ * @param token The `CancellationToken`. Whether the user want's to cancel the
+ * test runs.
+ */
+export async function runHandler(
+    env: h.Env,
+    request: vscode.TestRunRequest,
+    token: vscode.CancellationToken
+) {
+    const toDelete = await checkForNewTests(env, request);
+
+    const run = env.controller.createTestRun(request);
+    const tests = t.testList(request, env.controller, toDelete);
+
+    for (const test of tests) {
+        if (!token.isCancellationRequested) {
+            const passEnv = {
+                config: env.config,
+                controller: env.controller,
+                outChannel: env.outChannel,
+                run,
+                testData: env.testData,
+            };
+            passEnv.run = run;
+
+            run.started(test);
+            // eslint-disable-next-line no-await-in-loop
+            await runSingleTest(passEnv, test);
+        }
+    }
+
+    run.end();
+}
 
 /**
  * Check for new tests by running the text runners needed for the given tests.
@@ -23,17 +61,14 @@ import * as vscode from "vscode";
  * @param env The extension's environment.
  * @param request The run request containing the list of tests to run.
  */
-export async function checkForNewTests(
-    env: h.Env,
-    request: vscode.TestRunRequest
-) {
+async function checkForNewTests(env: h.Env, request: vscode.TestRunRequest) {
     const workspaces: vscode.WorkspaceFolder[] = [];
     if (request.include) {
         workspaces.push(...h.testItemsToWorkspaces(request.include));
     } else {
         workspaces.push(...h.workspaceFolders());
     }
-    await t.addTests(env, workspaces);
+    return t.addTests(env, workspaces);
 }
 
 /**
@@ -41,7 +76,7 @@ export async function checkForNewTests(
  * @param env The environment needed to run a test.
  * @param test The test to run.
  */
-export async function runSingleTest(env: h.Env, test: vscode.TestItem) {
+async function runSingleTest(env: h.Env, test: vscode.TestItem) {
     const ret = env.testData.get(test);
     env.outChannel.appendLine(
         `Running test "${test.parent ? test.parent.label : ""}   ${
@@ -70,7 +105,6 @@ export async function runSingleTest(env: h.Env, test: vscode.TestItem) {
  * @param env The environment needed for the parsing.
  * @param data The data to parse and construct the test result.
  */
-
 async function parseTestResult(
     env: h.Env,
     data: {
@@ -107,7 +141,6 @@ async function parseTestResult(
  * @param data The needed data.
  * @param errElem The test that produced the error.
  */
-
 async function setTestError(
     env: h.Env,
     data: { out: io.Output; startTime: number; test: vscode.TestItem },
@@ -130,10 +163,9 @@ async function setTestError(
  * @param msg The error message.
  * @param test The test that produced the error.
  */
-
 async function setRunnerError(env: h.Env, msg: string, test: vscode.TestItem) {
     const mess = new vscode.TestMessage(msg);
-    const loc = await setSourceLocation(test, env.testData);
+    const loc = await h.setSourceLocation(test, env.testData);
     mess.location = loc;
     env.run?.errored(test, mess);
 }
@@ -146,7 +178,6 @@ async function setRunnerError(env: h.Env, msg: string, test: vscode.TestItem) {
  * @returns A `TestMessage` object filled with the information of the failed
  * test.
  */
-
 async function constructMessage(data: {
     txt: string;
     test: vscode.TestItem;
@@ -154,32 +185,11 @@ async function constructMessage(data: {
     errElem: p.TestType;
 }) {
     let message = new vscode.TestMessage(data.txt);
-    const loc = await setSourceLocation(data.test, data.testData);
+    const loc = await h.setSourceLocation(data.test, data.testData);
     if (loc) {
         message.location = loc;
     }
     message.actualOutput = data.errElem.actual;
     message.expectedOutput = data.errElem.expected;
     return message;
-}
-
-/**
- * Return the line and column of the test error.
- * @param data The data needed to get the source location.
- * @returns A `Location` of the error or `undefined`.
- */
-
-async function setSourceLocation(test: vscode.TestItem, testData: h.TestData) {
-    if (test.uri) {
-        const textData = await vscode.workspace.fs.readFile(test.uri);
-        const ret = testData.get(test);
-        const regexPref = ret?.isInline ? c.inlineTestPrefix + '"' : '"';
-        const loc = h.getPosition(
-            regexPref + p.escapeRegex(test.label),
-            textData.toString()
-        );
-        return new vscode.Location(test.uri, loc);
-    }
-    // eslint-disable-next-line no-undefined
-    return undefined;
 }

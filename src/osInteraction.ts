@@ -159,12 +159,14 @@ async function findInTestSources(
     testDirs: string[],
     groupName: string
 ) {
-    for await (const pathTestDir of testDirs) {
+    for (const pathTestDir of testDirs) {
+        // eslint-disable-next-line no-await-in-loop
         const option2 = await findFilesRelative(
             root,
             pathTestDir + "/" + c.testSourceGlob
         );
-        for await (const opt of option2) {
+        for (const opt of option2) {
+            // eslint-disable-next-line no-await-in-loop
             const textData = await vscode.workspace.fs.readFile(
                 vscode.Uri.joinPath(root.uri, opt)
             );

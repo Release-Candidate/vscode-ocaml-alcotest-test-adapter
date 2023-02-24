@@ -1,9 +1,9 @@
 # Contributing
 
-- [Contributing](#contributing)
-  - [Setup](#setup)
-  - [Build Commands](#build-commands)
-    - [Internal Targets](#internal-targets)
+- [Setup](#setup)
+- [Sources](#sources)
+- [Build Commands](#build-commands)
+  - [Internal Targets](#internal-targets)
 
 ## Setup
 
@@ -11,6 +11,17 @@
 - Clone the GitHub repository [vscode-ocaml-alcotest-test-adapter](https://github.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter)
 - run `yarn install` to install all dependencies and development dependencies. You need the development dependencies to build and package the extension.
 - run `yarn --ignore-engines package` - this generates the extension package `vscode-ocaml-alcotest-test-adapter-VERSION.vsix` which you can install to VS Code
+
+## Sources
+
+- [./src/extension.ts](./src/extension.ts) - the main entry point of the extension
+- [./src/list_tests.ts](./src/list_tests.ts) - source to parse and generate the list of test cases / tree
+- [./src/run_tests.ts](./src/run_tests.ts) - source to run tests
+- [./src/constants.ts](./src/constants.ts) - all constants
+- [./src/extension_helpers.ts](./src/extension_helpers.ts) - helper function for the extensions, that didn't fit in another file
+- [./src/osInteraction.ts](./src/osInteraction.ts) - I/O: running commands, reading files, ...
+- [./src/parsing.ts](./src/parsing.ts) - parsing of test run outputs, test list outputs, ...
+- [./test](./test) - tests
 
 ## Build Commands
 

@@ -2,9 +2,9 @@
     "name": "vscode-ocaml-alcotest-test-adapter",
     "displayName": "OCaml Alcotest Test Explorer",
     "version": "0.1.0",
-    "preview": true,
+    "preview": false,
     "publisher": "release-candidate",
-    "description": "Support for OCaml Alcotest and Alcotest inline tests.",
+    "description": "Support for OCaml Alcotest and Alcotest inline PPX tests.",
     "keywords": [
         "OCaml",
         "Alcotest",
@@ -22,7 +22,7 @@
     "capabilities": {
         "untrustedWorkspaces": {
             "supported": false,
-            "description": "Do not run tests in an untrusted workspace because they can execute arbitrary code!"
+            "description": "Do not run tests in untrusted workspaces because tests can execute arbitrary code!"
         }
     },
     "activationEvents": [
@@ -37,9 +37,7 @@
         "workspaceContains:**/*.ml",
         "workspaceContains:**/*.mli",
         "workspaceContains:**/*.mll",
-        "workspaceContains:**/*.mly",
-        "workspaceContains:**/*.re",
-        "workspaceContains:**/*.rei"
+        "workspaceContains:**/*.mly"
     ],
     "main": "./out/extension",
     "license": "SEE LICENSE IN LICENSE",

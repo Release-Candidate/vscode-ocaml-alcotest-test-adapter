@@ -65,7 +65,7 @@ async function setupExtension(
     const runProfile = controller.createRunProfile(
         c.runProfileLabel,
         vscode.TestRunProfileKind.Run,
-        (r, tok) => runHandler(env, r, tok)
+        (r, tok) => rt.runHandler(env, r, tok)
     );
     context.subscriptions.push(runProfile);
 
@@ -78,41 +78,4 @@ async function setupExtension(
     context.subscriptions.push(disposable);
 
     await t.addTests(env, h.workspaceFolders());
-}
-
-/**
- * Run or cancel running tests.
- * This is called whenever the user wants to run or cancel tests.
- * @param env All needed objects are contained in this environment.
- * @param request The actual run request.
- * @param token The `CancellationToken`. Whether the user want's to cancel the
- * test runs.
- */
-async function runHandler(
-    env: h.Env,
-    request: vscode.TestRunRequest,
-    token: vscode.CancellationToken
-) {
-    await rt.checkForNewTests(env, request);
-
-    const run = env.controller.createTestRun(request);
-    const tests = t.testList(request, env.controller);
-
-    for await (const test of tests) {
-        if (!token.isCancellationRequested) {
-            const passEnv = {
-                config: env.config,
-                controller: env.controller,
-                outChannel: env.outChannel,
-                run,
-                testData: env.testData,
-            };
-            passEnv.run = run;
-
-            run.started(test);
-            await rt.runSingleTest(passEnv, test);
-        }
-    }
-
-    run.end();
 }
