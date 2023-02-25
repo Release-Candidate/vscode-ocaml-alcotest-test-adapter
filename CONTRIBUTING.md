@@ -1,9 +1,31 @@
 # Contributing
 
+- [What does the extension do?](#what-does-the-extension-do)
 - [Setup](#setup)
 - [Sources](#sources)
 - [Build Commands](#build-commands)
   - [Internal Targets](#internal-targets)
+
+## What does the extension do?
+
+On starting the extension - see `activationEvents` in [./package.json](./package.json) and function `activate` in [./src/extension.ts](./src/extension.ts):
+
+- add, update or remove new tests to Test Explorer's test tree for every existing workspace (folder) in the current workspace:
+  - search for the inline test runner executables
+  - run every one of them with `dune exec` so that the test runners are recompiled if necessary.
+  - use test runner arguments to print the list of tests
+  - parse this output and add, update or remove nodes in the Test Explorer's tree
+  - parse source files for the location of the test cases and set them.
+  - process 'normal' test cases by grepping for test runner names in dune configuration files in all configured test subdirectories of the current workspace root.
+  - the rest is the same as for inline tests
+
+If a user runs a test - see function `runHandler` in [./src/run_tests.ts](./src/run_tests.ts):
+
+- as above, add, update or remove new tests to Test Explorer's test tree for the workspace that contains the tests to run
+- Run the tests:
+  - run every single test using `dune exec` on the test runner.
+  - parse the output of the test
+  - if a test failed, set the 'test message' to the output of the failed test
 
 ## Setup
 
@@ -15,12 +37,12 @@
 ## Sources
 
 - [./src/extension.ts](./src/extension.ts) - the main entry point of the extension
-- [./src/list_tests.ts](./src/list_tests.ts) - source to parse and generate the list of test cases / tree
-- [./src/run_tests.ts](./src/run_tests.ts) - source to run tests
-- [./src/constants.ts](./src/constants.ts) - all constants
-- [./src/extension_helpers.ts](./src/extension_helpers.ts) - helper function for the extensions, that didn't fit in another file
-- [./src/osInteraction.ts](./src/osInteraction.ts) - I/O: running commands, reading files, ...
-- [./src/parsing.ts](./src/parsing.ts) - parsing of test run outputs, test list outputs, ...
+- [./src/list_tests.ts](./src/list_tests.ts) - parse and generate the list of test cases / tree
+- [./src/run_tests.ts](./src/run_tests.ts) - run tests
+- [./src/constants.ts](./src/constants.ts) - all constants except for regexps, which are located in [./src/parsing.ts](./src/parsing.ts)
+- [./src/extension_helpers.ts](./src/extension_helpers.ts) - all other functions that didn't fit in another file
+- [./src/osInteraction.ts](./src/osInteraction.ts) - I/O: run commands, read files, ...
+- [./src/parsing.ts](./src/parsing.ts) - parse test runner outputs, parse content of files, ...
 - [./test](./test) - tests
 
 ## Build Commands
