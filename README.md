@@ -1,8 +1,13 @@
-# ![Alcotest logo](./images/alcotest-logo_rect.png) OCaml Alcotest Test Explorer for Visual Studio Code
+# OCaml Alcotest Test Explorer for Visual Studio Code
 
 [![Lint](https://github.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter/actions/workflows/lint.yml/badge.svg)](https://github.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter/actions/workflows/lint.yml)
+[![Release](https://github.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter/actions/workflows/release.yml/badge.svg)](https://github.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter/actions/workflows/release.yml)
+[![Visual Studio Marketplace Downloads](https://img.shields.io/visual-studio-marketplace/d/Release-Candidate.vscode-ocaml-alcotest-test-adapter)](https://marketplace.visualstudio.com/items?itemName=release-candidate.vscode-ocaml-alcotest-test-adapter)
+[![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/Release-Candidate.vscode-ocaml-alcotest-test-adapter)](https://marketplace.visualstudio.com/items?itemName=release-candidate.vscode-ocaml-alcotest-test-adapter)
 
-This extension lets you run OCaml [Alcotests](<https://github.com/mirage/alcotest>) and [inline Alcotests](https://gitlab.com/gopiandcode/ppx-inline-alcotest) with the (native) Test Explorer UI.
+![Alcotest logo](./images/alcotest-logo_rect.png)
+
+This extension lets you run OCaml [Alcotests](https://github.com/mirage/alcotest) and [inline Alcotests](https://gitlab.com/gopiandcode/ppx-inline-alcotest) with the (native) Test Explorer UI.
 
 ![Animation of a test run](https://raw.githubusercontent.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter/main/images/run_tests.gif)
 
@@ -11,6 +16,7 @@ This extension lets you run OCaml [Alcotests](<https://github.com/mirage/alcotes
 - [Getting started](#getting-started)
   - [Dependencies](#dependencies)
   - [Installation](#installation)
+    - [Version for VS Code older than 1.65 (February 2022)](#version-for-vs-code-older-than-165-february-2022)
   - [Q \& A](#q--a)
     - [Q: What do the groups in the Test Explorer view mean?](#q-what-do-the-groups-in-the-test-explorer-view-mean)
     - [Q: A test has been added, how can I add that to the Test Explorer?](#q-a-test-has-been-added-how-can-i-add-that-to-the-test-explorer)
@@ -36,7 +42,6 @@ This extension lets you run OCaml [Alcotests](<https://github.com/mirage/alcotes
 ### Drawbacks
 
 - needs dune
-- you need to run a test to discover changes or new test cases
 - test case names are truncated by the Alcotest test runners
 - the assumption is that all test cases of a test are contained in the same source file
 - the name of the tests is searched for in source files, so the source's location can be off from the real definition
@@ -49,17 +54,25 @@ This extension lets you run OCaml [Alcotests](<https://github.com/mirage/alcotes
 
 ### Dependencies
 
-- Visual Studio Code version 1.59 (July 2021) or higher (for native Test Explorer support)
+- Visual Studio Code version 1.65 (February 2022) or higher (for native Test Explorer support and the `Refresh Tests` button) - a version for VS Code >= 1.59 see [Version for VS Code older than 1.65 (February 2022)](#version-for-vs-code-older-than-165-february-2022)
 - [Alcotest](<https://github.com/mirage/alcotest>) or [PPX Inline Alcotest](https://gitlab.com/gopiandcode/ppx-inline-alcotest)
 - [Dune](https://dune.build/) the extension uses Dune to build and run the test runners.
+
+**Attention:** you must be in a trusted workspace. Tests (test runners) can execute arbitrary code, so you do **not** want to run them in untrusted directories!
 
 ### Installation
 
 Either
 
-- install the extension directly from the Visual Studio Code Marketplace [Alcotest Test Explorer](https://marketplace.visualstudio.com/publishers/release-candidate)
+- install the extension directly from the Visual Studio Code Marketplace [Alcotest Test Explorer](https://marketplace.visualstudio.com/items?itemName=release-candidate.vscode-ocaml-alcotest-test-adapter)
 - or download the extension from the [latest release at GitHub](https://github.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter/releases/latest)
 - or build the extension yourself by cloning the [GitHub Repository](https://github.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter) and running `yarn install` and `yarn package` in the root directory of the cloned repo.
+
+#### Version for VS Code older than 1.65 (February 2022)
+
+The version 0.1.0 has support for VS Code versions >= 1.59 and can be downloaded from the [VS Code Marketplace](https://marketplace.visualstudio.com/_apis/public/gallery/publishers/release-candidate/vsextensions/vscode-ocaml-alcotest-test-adapter/0.1.0/vspackage) or the [GitHub Release](https://github.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter/releases/tag/v0.1.0).
+
+Support for versions of VS Code older than 1.65 has been dropped with version 0.2.0 of the Extension because of the support for the **refresh** button in the Test Explorer view ([Testing refresh action](https://code.visualstudio.com/updates/v1_65#_testing-refresh-action-and-sorttext)).
 
 ### Q & A
 
@@ -71,7 +84,9 @@ A: Every workspace folder in the current project has it's own node, `Workspace: 
 
 #### Q: A test has been added, how can I add that to the Test Explorer?
 
-A: Run any test case to re-discover all tests in the same workspace. **Note:** it's best to run a test case that does not take long.
+![Animation of the Refresh Tests button](https://raw.githubusercontent.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter/main/images/refresh_tests.gif)
+
+A: Push the `Refresh Tests` button in the upper right of the Test Explorer view or run any test case to re-discover all tests in the same workspace.
 
 #### Q: I am not seeing the full name of my test case, why?
 

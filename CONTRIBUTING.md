@@ -22,6 +22,10 @@ On starting the extension - see `activationEvents` in [./package.json](./package
     - grep for test runner executable names in these files
     - the rest is the same as for inline tests ('run every one of them ...')
 
+If a user presses the `Refresh Tests` button - see `controller.refreshHandler`:
+
+- the same as in **add, update or remove tests to Test Explorer's test tree**
+
 If a user runs a test - see function `runHandler` in [./src/run_tests.ts](./src/run_tests.ts):
 
 - as above, add, update or remove tests to Test Explorer's test tree for the workspace that contains the tests to run

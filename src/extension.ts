@@ -60,22 +60,32 @@ async function setupExtension(
     );
     context.subscriptions.push(controller);
 
-    const env: h.Env = { config, controller, outChannel, testData };
-
     const runProfile = controller.createRunProfile(
         c.runProfileLabel,
         vscode.TestRunProfileKind.Run,
-        (r, tok) => rt.runHandler(env, r, tok)
+        (r, tok) =>
+            rt.runHandler({ config, controller, outChannel, testData }, r, tok)
     );
     context.subscriptions.push(runProfile);
 
+    // eslint-disable-next-line no-unused-vars
+    controller.refreshHandler = async (_) => {
+        t.addTests(
+            { config, controller, outChannel, testData },
+            h.workspaceFolders()
+        );
+    };
+
     const disposable = vscode.workspace.onDidChangeWorkspaceFolders(
         async (e) => {
-            t.addTests(env, e.added);
+            t.addTests({ config, controller, outChannel, testData }, e.added);
             e.removed.map((r) => controller.items.delete(r.name));
         }
     );
     context.subscriptions.push(disposable);
 
-    await t.addTests(env, h.workspaceFolders());
+    await t.addTests(
+        { config, controller, outChannel, testData },
+        h.workspaceFolders()
+    );
 }

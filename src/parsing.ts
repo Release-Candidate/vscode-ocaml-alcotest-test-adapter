@@ -11,11 +11,12 @@
  */
 
 import * as c from "./constants";
+import * as vscode from "vscode";
 
 /**
  * Regexp to escape special regexp characters in strings.
  */
-const regexpRegex = /[\\^$.*+?()[\]{}|-]/gu;
+const regexpRegex = /[\\^$.*+?()[\]{}|]/gu;
 
 /**
  * Regexp to parse version numbers.
@@ -95,7 +96,6 @@ export function isValidVersion(s: string | undefined) {
     }
 
     const m = s.match(versionRegex);
-    // eslint-disable-next-line no-magic-numbers
     if (m) {
         return true;
     }
@@ -104,25 +104,61 @@ export function isValidVersion(s: string | undefined) {
 }
 
 /**
- * Return the first position of `s` in `text`, as line number and column number.
- *
- * @param s The string to search for.
- * @param text The text to search the string in.
- * @returns The first position of `s` in `text`, as line number and column number.
+ * Return a `Range` containing the start and end of the given test name in the
+ * given text.
+ * @param testLabel The name of the test to search for.
+ * @param text The text to search in.
+ * @param isInline If this is an inline PPX test or not.
+ * @returns A `Range` containing the test's name in `text`.
  */
-export function getLineAndCol(s: string, text: string) {
-    const lines = text.split("\n");
-    let lineNum = 0;
-    for (const line of lines) {
-        const index = line.search(s);
-        if (index >= 0) {
-            return { line: lineNum, col: index };
-        }
-        // eslint-disable-next-line no-magic-numbers
-        lineNum += 1;
-    }
+export function getSourceRange(
+    testLabel: string,
+    text: string,
+    isInline: boolean
+) {
+    const regexPref = isInline ? c.inlineTestPrefix + '"' : '"';
+    return getRange(
+        new RegExp(regexPref + escapeRegex(testLabel), "dmsu"),
+        text.toString()
+    );
+}
 
-    return { line: 0, col: 0 };
+/**
+ * Return the first location of `s` in `text`, as `Range`.
+ *
+ * @param r The regex to match.
+ * @param text The text to search the string in.
+ * @returns The first position of `r` in `text`.
+ */
+export function getRange(r: RegExp, text: string) {
+    const loc = getLineAndCol(r, text);
+    const start = new vscode.Position(loc.line, loc.col);
+    const end = new vscode.Position(loc.endLine, loc.endCol);
+    return new vscode.Range(start, end);
+}
+
+/**
+ * Return the first position of `r` in `text`, as line number and column number.
+ * The end of the match is returned in the fields `endLine` and `endCol`.
+ * If it hasn't been found, `{ line: 0, col: 0, endLine: 0, endCol: 0 }` is returned
+ * @param r The regex to match.
+ * @param text The text to search the string in.
+ * @returns The first position of `r` in `text`, as line number and column
+ * number. The end of the match is returned in the fields `endLine` and
+ * `endCol`.
+ */
+export function getLineAndCol(r: RegExp, text: string) {
+    const match = text.match(r);
+    const idx = match?.index ? match.index : 0;
+    const before = text.slice(0, idx);
+    const col = idx - before.lastIndexOf("\n") - 1;
+    const line = before.split("\n").length - 1;
+    const matchLen = match?.[0].length ? match[0].length : 0;
+    const after = text.slice(idx, idx + matchLen);
+    const addLine = after.split("\n").length - 1;
+    const endCol =
+        addLine === 0 ? col + matchLen : matchLen - after.lastIndexOf("\n") - 1;
+    return { line, col, endLine: line + addLine, endCol };
 }
 
 /**

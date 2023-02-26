@@ -7,3 +7,4 @@ vscode-ocaml-alcotest-test-adapter-*.vsix
 .vscode-test
 eslint_report.json
 latest_changelog.md
+package-lock.json

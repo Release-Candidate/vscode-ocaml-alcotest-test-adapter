@@ -10,7 +10,6 @@
  * Helper functions to deal with the extension API.
  */
 
-import * as c from "./constants";
 import * as io from "./osInteraction";
 import * as p from "./parsing";
 import * as vscode from "vscode";
@@ -51,12 +50,16 @@ export function workspaceFolders() {
     return vscode.workspace.workspaceFolders || [];
 }
 
-export function testItemsToWorkspaces(items: vscode.TestItem[]) {
+/**
+ * Return the list of workspaces the given tests belong to.
+ * @param items The tests to check for their workspaces.
+ * @returns A list of workspaces the tests belong to.
+ */
+export function testItemsToWorkspaces(items: readonly vscode.TestItem[]) {
     const wFolders = workspaceFolders();
     const workspaces = items
         .map(onlyWorkspaces)
         .sort((i, j) => i.id.localeCompare(j.id))
-        // eslint-disable-next-line no-magic-numbers
         .filter((v, idx, arr) => v.id !== arr.at(idx + 1)?.id)
         .map(
             (v) =>
@@ -85,18 +88,6 @@ export function testItemsToWorkspaces(items: vscode.TestItem[]) {
 }
 
 /**
- * Return the first location of `s` in `text`, as `Position`.
- *
- * @param s The string to search for.
- * @param text The text to search the string in.
- * @returns The first position of `s` in `text`.
- */
-export function getPosition(s: string, text: string) {
-    const loc = p.getLineAndCol(s, text);
-    return new vscode.Position(loc.line, loc.col);
-}
-
-/**
  * Return the start and end line and column of the test in a source file.
  * @param data The data needed to get the source location.
  * @returns A `Location` containing a `Range` of the error or `undefined`.
@@ -108,17 +99,11 @@ export async function setSourceLocation(
     if (test.uri) {
         const textData = await vscode.workspace.fs.readFile(test.uri);
         const ret = testData.get(test);
-        const regexPref = ret?.isInline ? c.inlineTestPrefix + '"' : '"';
-        const startLoc = getPosition(
-            regexPref + p.escapeRegex(test.label),
-            textData.toString()
+        const errorRange = p.getSourceRange(
+            test.label,
+            textData.toString(),
+            Boolean(ret?.isInline)
         );
-        const searchString = regexPref + test.label;
-        const endLoc = new vscode.Position(
-            startLoc.line,
-            startLoc.character + searchString.length
-        );
-        const errorRange = new vscode.Range(startLoc, endLoc);
         return new vscode.Location(test.uri, errorRange);
     }
     // eslint-disable-next-line no-undefined

@@ -16,6 +16,8 @@ import * as mocha from "mocha";
 import * as parse from "../src/parsing";
 import * as testErrors from "./fixtures/test_errors";
 import * as testLists from "./fixtures/test_lists";
+import * as testSources from "./fixtures/test_sources";
+import * as vscode from "vscode";
 
 /* eslint-disable max-lines-per-function */
 
@@ -77,8 +79,8 @@ mocha.describe("Parsing Functions", () => {
         mocha.it("Every special character is escaped", () => {
             chai.assert.strictEqual(
                 parse.escapeRegex(" \\ ^ $ . * + ? ( ) [ ] { } | - "),
-                " \\\\ \\^ \\$ \\. \\* \\+ \\? \\( \\) \\[ \\] \\{ \\} \\| \\- ",
-                "' \\ ^ $ . * + ? ( ) [ ] { } | -' -> ' \\\\ \\^ \\$ \\. \\* \\+ \\? \\( \\) \\[ \\] \\{ \\} \\| \\- '"
+                " \\\\ \\^ \\$ \\. \\* \\+ \\? \\( \\) \\[ \\] \\{ \\} \\| - ",
+                "' \\ ^ $ . * + ? ( ) [ ] { } | -' -> ' \\\\ \\^ \\$ \\. \\* \\+ \\? \\( \\) \\[ \\] \\{ \\} \\| - '"
             );
         });
     });
@@ -153,33 +155,112 @@ mocha.describe("Parsing Functions", () => {
     mocha.describe("getLineAndCol", () => {
         mocha.it("Empty string -> 0:0", () => {
             chai.assert.deepEqual(
-                parse.getLineAndCol("", "fsgdfsgg"),
-                { line: 0, col: 0 },
+                parse.getLineAndCol(/^$/gmsu, "fsgdfsgg"),
+                { line: 0, col: 0, endLine: 0, endCol: 0 },
                 "Empty string -> 0:0"
             );
         });
         mocha.it("Not found -> 0:0", () => {
             chai.assert.deepEqual(
-                parse.getLineAndCol("A", "fsgdfsgg"),
-                { line: 0, col: 0 },
+                parse.getLineAndCol(/A/u, "fsgdfsgg"),
+                { line: 0, col: 0, endLine: 0, endCol: 0 },
                 "Empty string -> 0:0"
             );
         });
         mocha.it("At position 0:4", () => {
             chai.assert.deepEqual(
-                parse.getLineAndCol("o", "Hello World!"),
-                { line: 0, col: 4 },
+                parse.getLineAndCol(/o/u, "Hello World!"),
+                { line: 0, col: 4, endLine: 0, endCol: 5 },
                 "Hell_o_ World!"
             );
         });
         mocha.it("At position 2:14", () => {
             chai.assert.deepEqual(
                 parse.getLineAndCol(
-                    "to search",
+                    /to search/u,
                     "jkl\nhkkh\n01234567890123to search"
                 ),
-                { line: 2, col: 14 },
+                { line: 2, col: 14, endLine: 2, endCol: 23 },
                 "'to search' in 'jkl\\nhkkh\\n01234567890123to search'"
+            );
+        });
+    });
+    //==========================================================================
+    mocha.describe("getSourceRange", () => {
+        mocha.it("Empty string -> 0:0 - 0:1", () => {
+            chai.assert.deepEqual(
+                parse.getSourceRange("", "fsgdfsgg", false),
+                new vscode.Range(
+                    new vscode.Position(0, 0),
+                    new vscode.Position(0, 0)
+                ),
+                "Empty string -> Empty Range"
+            );
+        });
+        mocha.it("'parse 11*11' in testSource1", () => {
+            chai.assert.deepEqual(
+                parse.getSourceRange(
+                    "parse 11*11",
+                    testSources.testSource1,
+                    false
+                ),
+                testSources.testSource1Range,
+                "'parse 11*11' testSource1Range"
+            );
+        });
+        mocha.it("'parse 11/-11' in testSource1", () => {
+            chai.assert.deepEqual(
+                parse.getSourceRange(
+                    "parse 11/-11",
+                    testSources.testSource1,
+                    false
+                ),
+                testSources.testSource1Range2,
+                "'parse 11/-11' -> testSource1Range2"
+            );
+        });
+        mocha.it("'parse 21./-21.2' in testSource1", () => {
+            chai.assert.deepEqual(
+                parse.getSourceRange(
+                    "parse 21./-21.2",
+                    testSources.testSource1,
+                    false
+                ),
+                testSources.testSource1Range3,
+                "'parse 21./-21.2' -> testSource1Range3"
+            );
+        });
+        mocha.it("Inline 'parse 11*11' in testSource1", () => {
+            chai.assert.deepEqual(
+                parse.getSourceRange(
+                    "parse 11*11",
+                    testSources.testSource1,
+                    true
+                ),
+                testSources.testSource1RangeInl,
+                "Inline 'parse 11*11' -> testSource1Range"
+            );
+        });
+        mocha.it("Inline 'parse 11/-11' in testSource1", () => {
+            chai.assert.deepEqual(
+                parse.getSourceRange(
+                    "parse 11/-11",
+                    testSources.testSource1,
+                    true
+                ),
+                testSources.testSource1Range2Inl,
+                "Inline 'parse 11/-11' -> testSource1Range2"
+            );
+        });
+        mocha.it("Inline 'parse 21./-21.2' in testSource1", () => {
+            chai.assert.deepEqual(
+                parse.getSourceRange(
+                    "parse 21./-21.2",
+                    testSources.testSource1,
+                    true
+                ),
+                testSources.testSource1Range3Inl,
+                "Inline 'parse 21./-21.2' -> testSource1Range3"
             );
         });
     });

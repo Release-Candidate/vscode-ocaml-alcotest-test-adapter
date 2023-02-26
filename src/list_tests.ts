@@ -39,7 +39,7 @@ export async function addTests(
 
     env.outChannel.appendLine("Finished adding new tests.");
 
-    // eslint-disable-next-line no-magic-numbers, arrow-body-style
+    // eslint-disable-next-line arrow-body-style
     return toDeleteArray.flatMap((e) => {
         return e.status === "fulfilled" ? e.value : [];
     });

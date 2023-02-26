@@ -1,4 +1,20 @@
-(*******************************************************************************
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (C) 2023 Roland Csaszar
+ *
+ * Project:  vscode-ocaml-alcotest-test-adapter
+ * File:     test_sources.ts
+ * Date:     25.Feb.2023
+ *
+ * ==============================================================================
+ * File containing test sources and the ranges of certain test names in these.
+ */
+
+import * as vscode from "vscode";
+
+/* eslint-disable no-magic-numbers */
+
+export const testSource1 = `(*******************************************************************************
     Some tests. *)
 
 let%test "parse true" =
@@ -75,3 +91,52 @@ let%test
 (* =============================================================================
    Error messages
 *)
+`;
+
+/**
+ * The location of "parse 11*11" in `testSource1`.
+ */
+export const testSource1Range = new vscode.Range(
+    new vscode.Position(52, 9),
+    new vscode.Position(52, 21)
+);
+
+/**
+ * The location of "parse 11/-11" in `testSource1`.
+ */
+export const testSource1Range2 = new vscode.Range(
+    new vscode.Position(63, 2),
+    new vscode.Position(63, 15)
+);
+
+/**
+ * The location of "parse 21./-21.2" in `testSource1`.
+ */
+export const testSource1Range3 = new vscode.Range(
+    new vscode.Position(69, 0),
+    new vscode.Position(69, 16)
+);
+
+/**
+ * The location of "parse 11*11" in `testSource1`, searching for inline tests.
+ */
+export const testSource1RangeInl = new vscode.Range(
+    new vscode.Position(52, 0),
+    new vscode.Position(52, 21)
+);
+
+/**
+ * The location of "parse 11/-11" in `testSource1`, searching for inline tests.
+ */
+export const testSource1Range2Inl = new vscode.Range(
+    new vscode.Position(62, 0),
+    new vscode.Position(63, 15)
+);
+
+/**
+ * The location of "parse 21./-21.2" in `testSource1`, searching for inline tests.
+ */
+export const testSource1Range3Inl = new vscode.Range(
+    new vscode.Position(68, 0),
+    new vscode.Position(69, 16)
+);
