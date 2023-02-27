@@ -110,6 +110,6 @@
         "bundle": "yarn --ignore-engines run esbuild-base --minify",
         "vscode:prepublish": "yarn --ignore-engines run bundle",
         "package": "vsce package",
-        "publish": "vsce publish"
+        "publish-vsix": "vsce publish"
     }
 }
