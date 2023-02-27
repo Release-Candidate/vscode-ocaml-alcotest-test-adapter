@@ -14,6 +14,12 @@
 import { TestType } from "../../src/parsing";
 
 /**
+ * The output of a test runner if no tests have been found to run.
+ */
+export const noTestsFound = `Invalid request (no tests to run, filter skipped everything)!
+`;
+
+/**
  * This test failed because of an exception.
  *  * The error is: suite: 'AlOcaml', group: 'Environment Model tests', id: 4,
  * name: '11.+    11'.

@@ -92,8 +92,6 @@ async function addWorkspaceTests(env: h.Env, root: vscode.WorkspaceFolder) {
  * @param root The workspace to add the tests to and from.
  * @param workspaceItem The parent node of the workspace's test tree in the Test
  * Explorer.
- * @returns The list of `TestItems` that have been deleted from the Test
- * Explorer tree.
  */
 async function addNormalTests(
     env: h.Env,
@@ -232,6 +230,7 @@ async function generateTestList(
  * @returns The list of `TestItems` that have been deleted from the Test
  * Explorer tree.
  */
+// eslint-disable-next-line max-statements
 async function parseTestListOutput(
     env: h.Env,
     data: {
@@ -250,6 +249,9 @@ async function parseTestListOutput(
     });
     const toDelete: vscode.TestItem[] = [];
     const groups = p.parseTestList(data.listOutput);
+
+    toDelete.push(...deleteNonExistingGroups(suiteItem, groups));
+
     for (const group of groups) {
         // eslint-disable-next-line no-await-in-loop
         const sourcePath = await io.findSourceOfTest(
@@ -277,6 +279,35 @@ async function parseTestListOutput(
 
         toDelete.push(...deleteNonExisting(group, groupItem, env));
     }
+    return toDelete;
+}
+
+/**
+ * Check the given list of groups if there are any nodes in the tree, that have
+ * been deleted and delete these groups.
+ * That is, the group is not in the list of groups but is a children of the
+ * suite node.
+ * @param suiteItem The test suite the test belong to.
+ * @param groups The list of groups to check.
+ * @returns The list of `TestItems` that have been deleted from the Test
+ * Explorer tree.
+ */
+function deleteNonExistingGroups(
+    suiteItem: vscode.TestItem,
+    groups: { name: string; tests: p.TestType[] }[]
+) {
+    const suiteGroups: vscode.TestItem[] = [];
+    suiteItem.children.forEach((e) => suiteGroups.push(e));
+    const toDelete = suiteGroups.filter(
+        (e) => !groups.find((v) => v.name === e.id)
+    );
+
+    toDelete.forEach((e) => {
+        e.children.forEach((ch) => {
+            suiteItem.children.delete(ch.id);
+        });
+        suiteItem.children.delete(e.id);
+    });
 
     return toDelete;
 }

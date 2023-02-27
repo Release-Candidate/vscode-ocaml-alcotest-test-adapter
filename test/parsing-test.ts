@@ -265,6 +265,29 @@ mocha.describe("Parsing Functions", () => {
         });
     });
     //==========================================================================
+    mocha.describe("noTestsFound", () => {
+        mocha.it("Empty string -> false", () => {
+            chai.assert.isFalse(
+                parse.noTestsFound(""),
+                "Empty string -> false"
+            );
+        });
+        mocha.it("Any text -> false", () => {
+            chai.assert.isFalse(
+                parse.noTestsFound(
+                    "dfshgjkl  dfhgjdsfklgksdfjgh \njfsdfsa\nlfkjsdafô"
+                ),
+                "Any text -> false"
+            );
+        });
+        mocha.it("No test found msg -> true", () => {
+            chai.assert.isTrue(
+                parse.noTestsFound(testErrors.noTestsFound),
+                "noTestsFound -> true"
+            );
+        });
+    });
+    //==========================================================================
     mocha.describe("parseDuneTests", () => {
         mocha.it("Empty string -> empty list", () => {
             chai.assert.deepEqual(

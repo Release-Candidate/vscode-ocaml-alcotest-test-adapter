@@ -7,8 +7,9 @@
 
 ### Bugfixes
 
+- Remove deleted tests from the Test Explorer tree
 - Find multiline inline test case names like `let%test\nTEST_CASE_NAME`
-- README.md: fixed link to Alcotest
+- README.md: fix link to Alcotest
 
 ### Internal Changes
 

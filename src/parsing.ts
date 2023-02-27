@@ -73,6 +73,9 @@ const testErrorRegex =
 const testExceptionRegex =
     /^│\s+\[FAIL\]\s+(?<group>\S+[^\n]*?)\s+(?<id>\d+)\s+(?<name>[^\n]+?)\.+\s+│\s+[└─┘]+\s+^(?=\[exception\]\s+(?<excp>.*?)\n\n)/gmsu;
 
+const noTestsFoundRegex =
+    /^\s*?Invalid\s+request\s+\(no\s+tests\s+to\s+run,\s+filter\s+skipped\s+everything\)!$/msu;
+
 /**
  * Escape special regexp characters in `s`.
  * @param s The string in which to escape special characters
@@ -318,6 +321,24 @@ function listMatchToObject(match: RegExpMatchArray) {
         id: match.groups?.id ? parseInt(match.groups.id, 10) : 0,
         name: match.groups?.name ? match.groups.name : "",
     };
+}
+
+/**
+ * Return `true`, if the 'no tests found' error message has been found in the
+ * given string, `false` else.
+ *
+ * UNUSED. Left here for reference purposes.
+ * @param text The string to parse for the 'no tests found' error.
+ * @returns `true`, if the 'no tests found' error message has been found in the
+ * given string, `false` else.
+ */
+export function noTestsFound(text: string) {
+    const match = text.match(noTestsFoundRegex);
+    if (match) {
+        return true;
+    }
+
+    return false;
 }
 
 /**
