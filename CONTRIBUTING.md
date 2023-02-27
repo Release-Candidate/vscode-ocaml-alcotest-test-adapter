@@ -68,7 +68,7 @@ All yarn commands add `--ignore-engines` to not get a spurious warning:
 - `yarn --ignore-engines esbuild-watch` - runs the same commands as `yarn --ignore-engines esbuild-watch` in watch mode, that is, it re-bundles everything if a file has been changed
 - `yarn --ignore-engines bundle` - compiles and minifies the Typescript sources and bundles them to `./out/extension.js`, no source maps are generated. This is used for releases.
 - `yarn --ignore-engines package` - generates a VSIX package of the extension. That is, a 'normal' VS Code extension package
-- `yarn --ignore-engines publish` - publishes the extension to the marketplace. This needs a working marketplace account and an access token. To publish interactively, you can login with your token first by calling `yarn --ignore-engines vsce login YOUR_PUBLISHER_NAME`, where `YOUR_PUBLISHER_NAME` is the account to publish the extension to.
+- `yarn --ignore-engines publish-vsix` - publishes the extension to the marketplace. This needs a working marketplace account and an access token. To publish interactively, you can login with your token first by calling `yarn --ignore-engines vsce login YOUR_PUBLISHER_NAME`, where `YOUR_PUBLISHER_NAME` is the account to publish the extension to.
 
 ### Internal targets
 
