@@ -133,9 +133,9 @@ mocha.describe("I/O Functions", () => {
                 "-l",
                 "does_not_exist_I_hope",
             ]);
-            chai.assert.strictEqual(
-                out.stderr,
-                "ls: does_not_exist_I_hope: No such file or directory\n",
+            chai.assert.match(
+                out.stderr ? out.stderr : "",
+                /ls:\s+.*does_not_exist_I_hope.*No such file or directory/u,
                 "ls on non existing file."
             );
             chai.assert.strictEqual(out.stdout, "", "No output at stdout!");
