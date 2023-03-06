@@ -27,6 +27,12 @@ const versionRegex =
     /^[\s]*[vV]?(?:ersion)?\s*(?<version>[\p{N}][\p{N}\p{P}~]*)[\s]*$/mu;
 
 /**
+ * Regexp to match a lock error message of dune.
+ */
+const duneLockError =
+    /^\s*Error:\s+.*?dune\s+\(.*?\).*?locked.*?build\s+directory.*$\n^.*delete.*\.lock/msu;
+
+/**
  * Regex to parse dune test definitions to get the name of the tests
  * executables, stored in group `path`.
  * Parsing `(test[s] (name[s] ...))` stanzas.
@@ -83,6 +89,17 @@ const noTestsFoundRegex =
  */
 export function escapeRegex(s: string) {
     return s.replace(regexpRegex, "\\$&");
+}
+
+/**
+ * Return `true` if the given output (should be on `stderr`) matches the
+ * 'another dune process holds the lock' error message.
+ * @param s The dune output (on `stderr`) to parse.
+ * @returns `true` if the given output (should be on `stderr`) matches the
+ * 'another dune process holds the lock' error message. `false` else.
+ */
+export function isDuneLocked(s: string) {
+    return Boolean(s.match(duneLockError));
 }
 
 /**
@@ -194,6 +211,7 @@ export function parseDuneTests(s: string) {
  * isn't already a relative one.
  * Require: the regex match shall contain the match group `path`.
  * @param match The match object to process.
+ * @returns The list of relative paths.
  */
 function matchToRelPath(match: RegExpMatchArray) {
     const exes = match.groups ? match.groups.path.trim().split(/\s+/u) : [];
@@ -248,7 +266,7 @@ export function parseTestErrors(s: string) {
  * by group name.
  * @param r The regexp to use to parse ethe string `s`.
  * @param s The string to parse.
- * @param matchToObject: Function to convert the match object to a test oject.
+ * @param matchToObject Function to convert the match object to a test oject.
  * @returns A list of test objects `{ group, ... }`
  * sorted by `group`.
  */

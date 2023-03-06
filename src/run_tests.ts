@@ -21,7 +21,7 @@ import * as vscode from "vscode";
  * This is called whenever the user wants to run or cancel tests.
  * @param env All needed objects are contained in this environment.
  * @param request The actual run request.
- * @param token The `CancellationToken`. Whether the user want's to cancel the
+ * @param token The `CancellationToken`. Whether the user wants to cancel the
  * test runs.
  */
 export async function runHandler(
@@ -29,8 +29,9 @@ export async function runHandler(
     request: vscode.TestRunRequest,
     token: vscode.CancellationToken
 ) {
-    const toDelete = await checkForNewTests(env, request);
     const run = env.controller.createTestRun(request);
+    setTestsStarted(env, request, run);
+    const toDelete = await checkForNewTests(env, request);
     const tests = t.testList(request, env.controller, toDelete);
 
     for (const test of tests) {
@@ -43,14 +44,26 @@ export async function runHandler(
                 testData: env.testData,
             };
             passEnv.run = run;
-
-            run.started(test);
             // eslint-disable-next-line no-await-in-loop
             await runSingleTest(passEnv, test);
         }
     }
-
     run.end();
+}
+
+/**
+ * Set all tests in `request` to 'started'.
+ * @param env The extension's environment.
+ * @param request The list of tests to run.
+ * @param run The test run.
+ */
+function setTestsStarted(
+    env: h.Env,
+    request: vscode.TestRunRequest,
+    run: vscode.TestRun
+) {
+    const tests1 = t.testList(request, env.controller, []);
+    tests1.forEach((ti) => run.started(ti));
 }
 
 /**
@@ -173,7 +186,6 @@ async function setRunnerError(env: h.Env, msg: string, test: vscode.TestItem) {
  * Return a `TestMessage` object filled with the information of the failed
  * test.
  * @param data The needed data.
- * @param errElem The test object of the test that failed.
  * @returns A `TestMessage` object filled with the information of the failed
  * test.
  */

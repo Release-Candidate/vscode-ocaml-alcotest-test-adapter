@@ -32,12 +32,22 @@ export const outputChannelName = "Alcotest Tests";
 /**
  * The label of the `TestRunProfileKind.Run` test profile.
  */
-export const runProfileLabel = "Run test";
+export const runProfileLabel = "Run Alcotest tests";
 
 /**
  * The label of root of the inline test tree in the Test Explorer view.
  */
 export const inlineTestsLabel = "Inline Tests (PPX)";
+
+/**
+ * Return the visible name of the workspace.
+ * In the format: `Workspace: ID`.
+ * @param id The id of the workspace.
+ * @returns The visible name of the workspace.
+ */
+export function workspaceLabel(id: string) {
+    return `Workspace: ${id}`;
+}
 
 /**
  * Glob to search for sources of tests.

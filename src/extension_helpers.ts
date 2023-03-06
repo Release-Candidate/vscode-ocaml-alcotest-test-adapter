@@ -89,7 +89,8 @@ export function testItemsToWorkspaces(items: readonly vscode.TestItem[]) {
 
 /**
  * Return the start and end line and column of the test in a source file.
- * @param data The data needed to get the source location.
+ * @param test The test to process.
+ * @param testData The additional test data to use.
  * @returns A `Location` containing a `Range` of the error or `undefined`.
  */
 export async function setSourceLocation(

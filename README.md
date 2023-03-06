@@ -1,8 +1,10 @@
 # OCaml Alcotest Test Explorer for Visual Studio Code
 
+[![Tests](https://github.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter/actions/workflows/test.yml/badge.svg)](https://github.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter/actions/workflows/test.yml)
 [![Lint](https://github.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter/actions/workflows/lint.yml/badge.svg)](https://github.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter/actions/workflows/lint.yml)
 [![Release](https://github.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter/actions/workflows/release.yml/badge.svg)](https://github.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter/actions/workflows/release.yml)
 [![Visual Studio Marketplace Downloads](https://img.shields.io/visual-studio-marketplace/d/Release-Candidate.vscode-ocaml-alcotest-test-adapter)](https://marketplace.visualstudio.com/items?itemName=release-candidate.vscode-ocaml-alcotest-test-adapter)
+[![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/Release-Candidate.vscode-ocaml-alcotest-test-adapter)](https://marketplace.visualstudio.com/items?itemName=release-candidate.vscode-ocaml-alcotest-test-adapter)
 [![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/Release-Candidate.vscode-ocaml-alcotest-test-adapter)](https://marketplace.visualstudio.com/items?itemName=release-candidate.vscode-ocaml-alcotest-test-adapter)
 
 ![Alcotest logo](./images/alcotest-logo_rect.png)
@@ -22,7 +24,8 @@ This extension lets you run OCaml [Alcotests](https://github.com/mirage/alcotest
     - [Q: A test has been added, how can I add that to the Test Explorer?](#q-a-test-has-been-added-how-can-i-add-that-to-the-test-explorer)
     - [Q: I am not seeing the full name of my test case, why?](#q-i-am-not-seeing-the-full-name-of-my-test-case-why)
     - [Q: Where can I see the output of the test run(s)?](#q-where-can-i-see-the-output-of-the-test-runs)
-    - [Q: What does the red circle with a point in the middle mean?](#q-what-does-the-red-circle-with-a-point-in-the-middle-mean)
+    - [Q: How can I change which test extension's tests are run by the `Run Tests` button in the upper right of the Test Explorer?](#q-how-can-i-change-which-test-extensions-tests-are-run-by-the-run-tests-button-in-the-upper-right-of-the-test-explorer)
+    - [Q: What does the red circle with a dot in the middle mean?](#q-what-does-the-red-circle-with-a-dot-in-the-middle-mean)
     - [Q: Where can I see the log of the extension?](#q-where-can-i-see-the-log-of-the-extension)
     - [Q: I have two or more test cases with the same name in the same file, why are they all pointing to the first test case in the source file?](#q-i-have-two-or-more-test-cases-with-the-same-name-in-the-same-file-why-are-they-all-pointing-to-the-first-test-case-in-the-source-file)
 - [Configuration](#configuration)
@@ -101,7 +104,13 @@ click on `Go To Test` to the right of a failed test in the test explorer and the
 or hover over the [Error Lens](https://marketplace.visualstudio.com/items?itemName=usernamehw.errorlens) output in the source file - this preview is too narrow, so the test output is mangled.
 ![HOver over the Error Lens text](https://raw.githubusercontent.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter/main/images/hover_error_lens.png)
 
-#### Q: What does the red circle with a point in the middle mean?
+#### Q: How can I change which test extension's tests are run by the `Run Tests` button in the upper right of the Test Explorer?
+
+![Set default run profiles](https://raw.githubusercontent.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter/main/images/run_profiles.png)
+
+A: Click the down arrow to the right of the `Run Tests` button, there you can set the profiles using `Select Default Profile(s)`.
+
+#### Q: What does the red circle with a dot in the middle mean?
 
 ![Compile error](https://raw.githubusercontent.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter/main/images/compile_error.png)
 A: That means that dune returned an error (not a failed test). Mostly because of code that does not compile.

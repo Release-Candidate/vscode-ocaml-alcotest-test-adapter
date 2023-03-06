@@ -1,5 +1,20 @@
 # OCaml Alcotest Test Explorer for Visual Studio Code Changelog
 
+## Version 0.3.0 (2023-03-06)
+
+- Retry dune commands every 2.5s if another process holds the dune directory lock.
+- Change the name of the test profile to 'Run Alcotest tests'.
+- Set the tests state to 'run' before processing the tests.
+- Add documentation of 'Run Profiles'.
+
+### Internal Changes
+
+- Add GitHub test action.
+- Add GitHub Issue Template.
+- Add jsdoc plugin for Eslint.
+- Fix various jsdoc errors.
+- Use function `workspaceLabel` to set the workspace node label and id.
+
 ## Version 0.2.0 (2023-02-27)
 
 - Drop support for VS Code versions < 1.65 (February 2022) because of [Testing refresh action](https://code.visualstudio.com/updates/v1_65#_testing-refresh-action-and-sorttext)

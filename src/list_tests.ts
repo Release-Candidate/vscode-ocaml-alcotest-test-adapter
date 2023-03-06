@@ -47,8 +47,8 @@ export async function addTests(
 
 /**
  * Add all tests of a single workspace `root` to the Test Explorer.
- * @param root The workspace to add the tests from.
  * @param env Everything needed to add these tests.
+ * @param root The workspace to add the tests from.
  * @returns The list of `TestItems` that have been deleted from the Test
  * Explorer tree.
  */
@@ -71,6 +71,8 @@ async function addWorkspaceTests(env: h.Env, root: vscode.WorkspaceFolder) {
     /**
      * Return the `TestItem` of the current workspace if it does exist or create
      * it.
+     * @returns The `TestItem` of the current workspace if it does exist or create
+     * it.
      */
     function getWorkspaceItem() {
         const item = env.controller.items.get(root.name);
@@ -80,7 +82,7 @@ async function addWorkspaceTests(env: h.Env, root: vscode.WorkspaceFolder) {
 
         return env.controller.createTestItem(
             root.name,
-            `Workspace: ${root.name}`,
+            c.workspaceLabel(root.name),
             root.uri
         );
     }
@@ -314,9 +316,9 @@ function deleteNonExistingGroups(
 
 /**
  * Removes all deleted tests from the test tree.
- * @param env The Extension's environment.
  * @param group The test group to check for deleted items.
  * @param groupItem The `TestItem` of `group`.
+ * @param env The Extension's environment.
  * @returns The list of `TestItems` that have been deleted from the Test
  * Explorer tree.
  */

@@ -21,7 +21,7 @@ export const noTestsFound = `Invalid request (no tests to run, filter skipped ev
 
 /**
  * This test failed because of an exception.
- *  * The error is: suite: 'AlOcaml', group: 'Environment Model tests', id: 4,
+ * The error is: suite: 'AlOcaml', group: 'Environment Model tests', id: 4,
  * name: '11.+    11'.
  */
 export const exceptionError = `Testing \`AlOcaml'.

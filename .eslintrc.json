@@ -3,18 +3,25 @@
     "plugins": [
         "@typescript-eslint",
         "mocha",
-        "chai-friendly"
+        "chai-friendly",
+        "jsdoc"
     ],
     "extends": [
         "eslint:recommended",
         "plugin:mocha/recommended",
-        "plugin:chai-friendly/recommended"
+        "plugin:chai-friendly/recommended",
+        "plugin:jsdoc/recommended-error"
     ],
     "parserOptions": {
         "ecmaVersion": 12,
         "sourceType": "module"
     },
     "rules": {
+        "jsdoc/require-param-type": "off",
+        "jsdoc/require-returns-type": "off",
+        "jsdoc/newline-after-description": "off",
+        "jsdoc/require-param": "off",
+        "jsdoc/check-param-names": ["error", {"checkDestructured": false}],
         "accessor-pairs": "error",
         "array-bracket-newline": "off",
         "array-bracket-spacing": [
@@ -205,7 +212,7 @@
         "no-trailing-spaces": "error",
         "no-undef-init": "error",
         "no-undef": "off",
-        "no-undefined": "warn",
+        "no-undefined": "off",
         "no-underscore-dangle": "error",
         "no-unmodified-loop-condition": "error",
         "no-unneeded-ternary": "error",
