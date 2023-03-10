@@ -25,7 +25,7 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem.
 
 **Logs**
-If applicable, add logs of the extension (Output of `Alcotest Tests`), the Extension Host (Ouput of `Extension Host`) and Window (Output of `Window`).
+If applicable, add logs of the extension (Output of `Alcotest Tests`), the Extension Host (Output of `Extension Host`) and Window (Output of `Window`).
 
 **Example OCaml project**
 If possible, add a link to an OCaml project to reproduce the problem with.

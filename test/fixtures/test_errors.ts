@@ -65,6 +65,49 @@ export const exceptionErrorObject: { name: string; tests: TestType[] }[] = [
 ];
 
 /**
+ * This test failed because of an exception.
+ * The error is: suite: 'AlOcaml', group: 'Parser tests', id: 2,
+ * name: 'Int Test 1'.
+ */
+export const exceptionError2 = `Testing \`AlOcaml'.
+This run has ID \`T5V88FGT'.
+
+SSFSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+SSSSSSSSSSSSSSSSSS
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ [FAIL]        Parser tests                     2   Int Test 1.               │
+└──────────────────────────────────────────────────────────────────────────────┘
+[failure] Not a int!
+          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33
+          Called from Dune__exe__Test.int_test_parser in file "test/test.ml", line 16, characters 4-64
+          Called from Alcotest_engine__Core.Make.protect_test.(fun) in file "src/alcotest-engine/core.ml", line 181, characters 17-23
+          Called from Alcotest_engine__Monad.Identity.catch in file "src/alcotest-engine/monad.ml", line 24, characters 31-35
+
+Logs saved to \`~/Documents/code/OCaml-Interp/_build/_tests/AlOcaml/Parser tests.002.output'.
+ ──────────────────────────────────────────────────────────────────────────────
+
+Full test results in \`~/Documents/code/OCaml-Interp/_build/_tests/AlOcaml'.
+1 failure! in 0.000s. 1 test run.
+`;
+
+/**
+ * The result object of parsing `exceptionError`.
+ */
+export const exceptionErrorObject2: { name: string; tests: TestType[] }[] = [
+    {
+        name: "Parser tests",
+        tests: [
+            {
+                actual: 'Not a int!\n          Raised at Stdlib.failwith in file "stdlib.ml", line 29, characters 17-33\n          Called from Dune__exe__Test.int_test_parser in file "test/test.ml", line 16, characters 4-64\n          Called from Alcotest_engine__Core.Make.protect_test.(fun) in file "src/alcotest-engine/core.ml", line 181, characters 17-23\n          Called from Alcotest_engine__Monad.Identity.catch in file "src/alcotest-engine/monad.ml", line 24, characters 31-35',
+                id: 2,
+                name: "Int Test 1",
+            },
+        ],
+    },
+];
+
+/**
  * The error is: suite: 'AlOcaml', group: 'Big Step tests', id: 26,
  * name: 'comment should be ign...'.
  */
@@ -370,5 +413,46 @@ export const oneErrorInlineObject = [
     {
         name: "lib/interp_common.ml",
         tests: [{ actual: "true", expected: "false", id: 11, name: "parse 1" }],
+    },
+];
+
+/**
+ * A test failure that does not match against any 'normal' failure regex.
+ */
+export const unknownError = `Testing \`AlOcaml'.
+This run has ID \`VTPVT45N'.
+
+SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSFSSSSSSSSSSSSSSSSSSSS
+SSSSSSSSSSSSSSSSS
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ [FAIL]        Big Step tests                  26   comment should be ign...  │
+└──────────────────────────────────────────────────────────────────────────────┘
+sahdfklf hdjsaklhas dfhs  hjasdfl
+asjd f
+
+Raised at Alcotest_engine__Test.check in file "src/alcotest-engine/test.ml", line 196, characters 4-261
+Called from Alcotest_engine__Core.Make.protect_test.(fun) in file "src/alcotest-engine/core.ml", line 180, characters 17-23
+Called from Alcotest_engine__Monad.Identity.catch in file "src/alcotest-engine/monad.ml", line 24, characters 31-35
+
+Logs saved to \`~/Documents/code/OCaml-Interp/_build/_tests/AlOcaml/Big Step tests.026.output'.
+ ──────────────────────────────────────────────────────────────────────────────
+
+Full test results in \`~/Documents/code/OCaml-Interp/_build/_tests/AlOcaml'.
+1 failure! in 0.000s. 1 test run.`;
+
+/**
+ * The result object of parsing `unknownError`.
+ */
+export const unknownErrorObject = [
+    {
+        name: "Big Step tests",
+        tests: [
+            {
+                actual: 'sahdfklf hdjsaklhas dfhs  hjasdfl\nasjd f\n\nRaised at Alcotest_engine__Test.check in file "src/alcotest-engine/test.ml", line 196, characters 4-261\nCalled from Alcotest_engine__Core.Make.protect_test.(fun) in file "src/alcotest-engine/core.ml", line 180, characters 17-23\nCalled from Alcotest_engine__Monad.Identity.catch in file "src/alcotest-engine/monad.ml", line 24, characters 31-35\n\nLogs saved to `~/Documents/code/OCaml-Interp/_build/_tests/AlOcaml/Big Step tests.026.output\'.\n ',
+                id: 26,
+                name: "comment should be ign",
+            },
+        ],
     },
 ];

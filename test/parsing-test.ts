@@ -399,6 +399,13 @@ mocha.describe("Parsing Functions", () => {
                 "Test error 'exceptionError'"
             );
         });
+        mocha.it("Test exception string 2 -> list of test objects", () => {
+            chai.assert.deepEqual(
+                parse.parseTestErrors(testErrors.exceptionError2),
+                testErrors.exceptionErrorObject2,
+                "Test error 'exceptionError2'"
+            );
+        });
         mocha.it("Test two errors string -> list of test objects", () => {
             chai.assert.deepEqual(
                 parse.parseTestErrors(testErrors.twoErrors),
@@ -418,6 +425,13 @@ mocha.describe("Parsing Functions", () => {
                 parse.parseTestErrors(testErrors.threeErrors2),
                 testErrors.threeErrorsObject,
                 "Test error 'threeErrors2'"
+            );
+        });
+        mocha.it("Unknown failure message -> list of test objects", () => {
+            chai.assert.deepEqual(
+                parse.parseTestErrors(testErrors.unknownError),
+                testErrors.unknownErrorObject,
+                "Test error 'unknownError'"
             );
         });
         mocha.it("Inline test error string -> list of test objects", () => {
