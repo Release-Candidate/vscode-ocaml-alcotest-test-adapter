@@ -13,6 +13,7 @@
             "Alcotests",
             "backreference",
             "camelcase",
+            "failwith",
             "iife",
             "linebreak",
             "nonblock",

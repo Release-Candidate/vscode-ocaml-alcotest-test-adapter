@@ -77,8 +77,23 @@ const testErrorRegex =
  * `excp`.
  */
 const testExceptionRegex =
-    /^│\s+\[FAIL\]\s+(?<group>\S+[^\n]*?)\s+(?<id>\d+)\s+(?<name>[^\n]+?)\.+\s+│\s+[└─┘]+\s+^(?=\[exception\]\s+(?<excp>.*?)\n\n)/gmsu;
+    /^│\s+\[FAIL\]\s+(?<group>\S+[^\n]*?)\s+(?<id>\d+)\s+(?<name>[^\n]+?)\.+\s+│\s+[└─┘]+\s+^(?=\[(?:exception|failure|.*?)\]\s+(?<excp>.*?)\n\n)/gmsu;
 
+/**
+ * Regexp to parse Alcotest test results for failures.
+ * This is the 'last resort', a catch-all regex.
+ * The test group's name is saved in the first match group, `group`, the ID is captured
+ * in the second group with name `id` and the test's name is the third group
+ * called `name`.
+ * The output of the failure is contained in the group `output`.
+ */
+const testFailureGeneralRegex =
+    /^│\s+\[FAIL\]\s+(?<group>\S+[^\n]*?)\s+(?<id>\d+)\s+(?<name>[^\n]+?)\.+\s+│\s+[└─┘]+\s+^(?<output>.*?)──────────────────────/gmsu;
+
+/**
+ * Regex to parse the 'no test case matches the arguments, skipped all tests'
+ * message.
+ */
 const noTestsFoundRegex =
     /^\s*?Invalid\s+request\s+\(no\s+tests\s+to\s+run,\s+filter\s+skipped\s+everything\)!$/msu;
 
@@ -250,13 +265,21 @@ export function parseTestList(s: string) {
  * @returns A list of objects `{ name: group, tests: [{ id, name, expected, actual }] }`.
  */
 export function parseTestErrors(s: string) {
-    return groupTestHelper(
-        parseTestHelper<TestTypeIn>(
-            testErrorRegex,
-            s,
-            errorMatchToObject
-        ).concat(parseTestHelper(testExceptionRegex, s, exceptionMatchToObject))
+    const errors = parseTestHelper<TestTypeIn>(
+        testErrorRegex,
+        s,
+        errorMatchToObject
+    ).concat(parseTestHelper(testExceptionRegex, s, exceptionMatchToObject));
+
+    if (errors.length) {
+        return groupTestHelper(errors);
+    }
+
+    const errors2 = errors.concat(
+        parseTestHelper(testFailureGeneralRegex, s, catchAllMatchToObject)
     );
+
+    return groupTestHelper(errors2);
 }
 
 /**
@@ -342,6 +365,21 @@ function listMatchToObject(match: RegExpMatchArray) {
 }
 
 /**
+ * Return an object constructed by the match groups of `match`.
+ * @param match The match object containing match groups `group`, `id`, `name`
+ * and `output`.
+ * @returns The object filled with the match groups of `match`.
+ */
+function catchAllMatchToObject(match: RegExpMatchArray) {
+    return {
+        group: match.groups?.group ? match.groups.group : "",
+        id: match.groups?.id ? parseInt(match.groups.id, 10) : 0,
+        name: match.groups?.name ? match.groups.name : "",
+        actual: match.groups?.output ? match.groups.output : "",
+    };
+}
+
+/**
  * Return `true`, if the 'no tests found' error message has been found in the
  * given string, `false` else.
  *
@@ -423,10 +461,10 @@ function convertTestObject(test: TestTypeIn) {
     let t = {} as TestType;
     t.id = test.id;
     t.name = test.name;
-    if (test.expected) {
+    if (test.expected !== undefined) {
         t.expected = test.expected;
     }
-    if (test.actual) {
+    if (test.actual !== undefined) {
         t.actual = test.actual;
     }
     return t;
