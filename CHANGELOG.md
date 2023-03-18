@@ -1,6 +1,6 @@
 # OCaml Alcotest Test Explorer for Visual Studio Code Changelog
 
-## Version 0.5.0 (2023-03-20)
+## Version 0.5.0 (2023-03-18)
 
 - Add error message window if `dune` does not work in a workspace.
 
