@@ -19,6 +19,7 @@ import internal = require("stream");
 import * as parse from "./parsing";
 import * as vscode from "vscode";
 import path = require("path");
+import process = require("process");
 
 /**
  * Object holding the output of a process.
@@ -231,17 +232,20 @@ export async function runCommand(
     cmd: string,
     args: string[]
 ): Promise<Output> {
-    const process = child_process.spawn(cmd, args, { cwd: root.uri.path });
-
-    const checkCmd = new Promise((_, reject) => {
-        process.on("error", reject);
+    const proc = child_process.spawn(cmd, args, {
+        cwd: root.uri.path,
+        env: process.env,
     });
 
-    const out = await readStream(process.stdout);
-    const err = await readStream(process.stderr);
+    const checkCmd = new Promise((_, reject) => {
+        proc.on("error", reject);
+    });
+
+    const out = await readStream(proc.stdout);
+    const err = await readStream(proc.stderr);
 
     const exitCode = new Promise<number>((resolve) => {
-        process.on("close", resolve);
+        proc.on("close", resolve);
     });
 
     try {
@@ -250,6 +254,18 @@ export async function runCommand(
     } catch (error) {
         return { error: (error as Error).message };
     }
+}
+
+/**
+ * Run `opam env` and parse its output.
+ * Return the environment variables as a list.
+ * @param root The current working directory to use for `opam`.
+ * @returns A list of environment variables `[{ name, value}]`
+ */
+export async function opamEnv(root: vscode.WorkspaceFolder) {
+    const output = await runCommand(root, c.opamCmd, c.opamEnvArg);
+
+    return parse.parseOpamEnv(output.stdout ? output.stdout : "");
 }
 
 /**

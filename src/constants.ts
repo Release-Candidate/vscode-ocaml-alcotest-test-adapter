@@ -60,6 +60,21 @@ export const testSourceGlob = "**/*.ml";
 export const inlineTestPrefix = "let%test\\s+";
 
 /**
+ * The version of VS Code to use for testing.
+ */
+export const vscodeVersion = "1.65.0";
+
+/**
+ * Command to run Opam with.
+ */
+export const opamCmd = "opam";
+
+/**
+ * The arguments to pass to the opam command to get the current environment.
+ */
+export const opamEnvArg = ["env"];
+
+/**
  ******************************************************************************
  *  Test runner constants.
  */

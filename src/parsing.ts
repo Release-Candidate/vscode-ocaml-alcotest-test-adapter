@@ -27,6 +27,14 @@ const versionRegex =
     /^[\s]*[vV]?(?:ersion)?\s*(?<version>[\p{N}][\p{N}\p{P}~]*)[\s]*$/mu;
 
 /**
+ * Regexp to parse the output of `opam env`.
+ * The name of the environment variable is saved in match group `name`, the
+ * value in match group `value`.
+ */
+const opamEnvRegex =
+    /^(?:[sS][Ee][Tt]x?\s*)?(?<name>\w+)[=\s]['"](?<value>[^'"]+)['"]/gmu;
+
+/**
  * Regexp to match a lock error message of dune.
  */
 const duneLockError =
@@ -104,6 +112,29 @@ const noTestsFoundRegex =
  */
 export function escapeRegex(s: string) {
     return s.replace(regexpRegex, "\\$&");
+}
+
+/**
+ * Parse the string `s` for environment variables.
+ * Like for example the output of `opam env`.
+ * @param s The string to parse.
+ * @returns A list of environment variables and their values: `[{ name, value}]`
+ */
+export function parseOpamEnv(s: string) {
+    const matches = s.matchAll(opamEnvRegex);
+    const env: { name: string; value: string }[] = [];
+    if (!s?.length) {
+        return env;
+    }
+    for (const match of matches) {
+        const name = match.groups?.name;
+        const value = match.groups?.value;
+        if (name && value) {
+            env.push({ name, value });
+        }
+    }
+
+    return env;
 }
 
 /**

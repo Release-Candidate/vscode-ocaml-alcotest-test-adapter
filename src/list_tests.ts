@@ -52,9 +52,15 @@ export async function addTests(
  * @returns The list of `TestItems` that have been deleted from the Test
  * Explorer tree.
  */
+// eslint-disable-next-line max-statements
 async function addWorkspaceTests(env: h.Env, root: vscode.WorkspaceFolder) {
+    await setOpamEnv(root);
+
     // eslint-disable-next-line @typescript-eslint/no-extra-parens
     if (!(await h.isDuneWorking(root, env))) {
+        vscode.window.showWarningMessage(
+            `Error: Dune command 'dune' is not working in ${root.name}.\nSee the 'Output' window view of 'Alcotest Tests' for details.`
+        );
         return [];
     }
 
@@ -85,6 +91,17 @@ async function addWorkspaceTests(env: h.Env, root: vscode.WorkspaceFolder) {
             c.workspaceLabel(root.name),
             root.uri
         );
+    }
+}
+
+/**
+ * Run `opam env`, parse its output and set the environment accordingly.
+ * @param root The working directory for `opam`.
+ */
+async function setOpamEnv(root: vscode.WorkspaceFolder) {
+    const opamEnv = await io.opamEnv(root);
+    for (const oEnv of opamEnv) {
+        process.env[oEnv.name] = oEnv.value;
     }
 }
 

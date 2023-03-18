@@ -1,5 +1,18 @@
 # OCaml Alcotest Test Explorer for Visual Studio Code Changelog
 
+## Version 0.5.0 (2023-03-20)
+
+- Add error message window if `dune` does not work in a workspace.
+
+## Bugfixes
+
+- Use the current Opam environment to be able to use local executables like `dune`.
+
+### Internal Changes
+
+- Add tests to check the parsing of `opam env`.
+- Use VS Code 1.65 to run the tests.
+
 ## Version 0.4.0 (2023-03-10)
 
 - Mark a test case as failed if a `[FAIL]` tag is present, even if the actual error message can't be parsed.
