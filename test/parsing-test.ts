@@ -13,6 +13,7 @@
 import * as chai from "chai";
 import * as duneTests from "./fixtures/dune_tests";
 import * as mocha from "mocha";
+import * as opamEnvTests from "./fixtures/opamenv_tests";
 import * as parse from "../src/parsing";
 import * as testErrors from "./fixtures/test_errors";
 import * as testLists from "./fixtures/test_lists";
@@ -261,6 +262,37 @@ mocha.describe("Parsing Functions", () => {
                 ),
                 testSources.testSource1Range3Inl,
                 "Inline 'parse 21./-21.2' -> testSource1Range3"
+            );
+        });
+    });
+    //==========================================================================
+    mocha.describe("parseOpamEnv", () => {
+        mocha.it("Empty string -> []", () => {
+            chai.assert.deepEqual(
+                parse.parseOpamEnv(""),
+                [],
+                "Empty string -> []"
+            );
+        });
+        mocha.it("No environment vars -> []", () => {
+            chai.assert.deepEqual(
+                parse.parseOpamEnv("hugo=fasfasf\n'hfdaliehfal'"),
+                [],
+                "No environment vars -> []"
+            );
+        });
+        mocha.it("Unix env vars -> env vars", () => {
+            chai.assert.deepEqual(
+                parse.parseOpamEnv(opamEnvTests.opamEnvUnixish),
+                opamEnvTests.opamEnvUnixishObject,
+                "opamEnvUnixish -> opamEnvUnixishObject"
+            );
+        });
+        mocha.it("Windows env vars -> env vars", () => {
+            chai.assert.deepEqual(
+                parse.parseOpamEnv(opamEnvTests.opamEnvWin),
+                opamEnvTests.opamEnvWinObject,
+                "opamEnvWin -> opamEnvWinObject"
             );
         });
     });
