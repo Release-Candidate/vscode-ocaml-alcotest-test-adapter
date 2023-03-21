@@ -1,5 +1,15 @@
 # OCaml Alcotest Test Explorer for Visual Studio Code Changelog
 
+## Version 0.6.0 (2023-03-23)
+
+- Make the path to the Dune executable configurable. Can now be either an absolute path, a path relative to the project root or just `dune`, which is looked up in the local Opam environment or the `PATH`.
+- Add a message window to ask for a reload if a configuration value has changed.
+- Update documentation
+
+### Bugfixes
+
+- Do not delete the test groups of all other test runners if there exists more than one test runner.
+
 ## Version 0.5.0 (2023-03-18)
 
 - Add error message window if `dune` does not work in a workspace.

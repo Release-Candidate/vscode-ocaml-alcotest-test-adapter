@@ -10,6 +10,7 @@
  * Run the tests that are being requested by the user.
  */
 
+import * as c from "./constants";
 import * as h from "./extension_helpers";
 import * as io from "./osInteraction";
 import * as p from "./parsing";
@@ -99,10 +100,11 @@ async function runSingleTest(env: h.Env, test: vscode.TestItem) {
         const { root, runner } = ret;
         const startTime = Date.now();
         test.busy = true;
-        const out = await io.runRunnerTestsDune(root, runner, [
-            `${test.parent?.label}`,
-            `${test.id}`,
-        ]);
+        const out = await io.runRunnerTestsDune(root, {
+            duneCmd: c.getCfgDunePath(env.config),
+            runner,
+            tests: [`${test.parent?.label}`, `${test.id}`],
+        });
 
         await parseTestResult(env, { out, startTime, test });
         // eslint-disable-next-line require-atomic-updates

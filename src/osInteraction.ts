@@ -272,22 +272,22 @@ export async function opamEnv(root: vscode.WorkspaceFolder) {
  * This is a wrapper around `runCommand`, to retry running dune if another dune
  * process holds the lock file.
  * @param root The current working directory to use for dune.
- * @param args The command line arguments to pass to dune.
+ * @param cmd Command and arguments to call dune with.
  * @param sleepTime The time to sleep in seconds between each successive try of
  * acquiring the dune lock.
  * @returns The output of the dune command.
  */
 async function runDuneCommand(
     root: vscode.WorkspaceFolder,
-    args: string[],
+    cmd: { duneCmd: string; args: string[] },
     sleepTime: number
 ): Promise<Output> {
-    const out = await runCommand(root, c.duneCmd, args);
+    const out = await runCommand(root, cmd.duneCmd, cmd.args);
     if (out.stderr) {
         if (parse.isDuneLocked(out.stderr)) {
             // eslint-disable-next-line no-magic-numbers
             await sleep(sleepTime * 1000);
-            return runDuneCommand(root, args, sleepTime);
+            return runDuneCommand(root, cmd, sleepTime);
         }
     } else {
         return out;
@@ -313,16 +313,18 @@ async function runDuneCommand(
  * The test list output is contained in `stdout`, `stderr` should be the empty
  * string und `error` should be `undefined`. See {@link Output}
  * @param root The current working directory for the dune command.
+ * @param duneCmd The command to call dune with.
  * @param runner The path to the runner to execute.
  * @returns The output of the test runner in the `stdout` field.
  */
 export async function runRunnerListDune(
     root: vscode.WorkspaceFolder,
+    duneCmd: string,
     runner: string
 ) {
     return runDuneCommand(
         root,
-        [c.duneExecArg, runner, "--", ...c.runnerListOpts],
+        { duneCmd, args: [c.duneExecArg, runner, "--", ...c.runnerListOpts] },
         // eslint-disable-next-line no-magic-numbers
         2.5
     );
@@ -334,25 +336,32 @@ export async function runRunnerListDune(
  * Set `root` as the working directory of the command.
  * `{ stdout; stderr; error }` is returned, see {@link Output}.
  * @param root The current working directory for the dune command.
- * @param runner The path to the runner to execute.
- * @param tests The names of the tests to run.
+ * @param cmd.duneCmd The command to call dune with.
+ * @param cmd.runner The path to the runner to execute.
+ * @param cmd.tests The names of the tests to run.
  * @returns The output of the test runner.
  */
 export async function runRunnerTestsDune(
     root: vscode.WorkspaceFolder,
-    runner: string,
-    tests: string[]
+    cmd: {
+        duneCmd: string;
+        runner: string;
+        tests: string[];
+    }
 ) {
     return runDuneCommand(
         root,
-        [
-            c.duneExecArg,
-            runner,
-            "--",
-            c.runnerTestArg,
-            ...tests,
-            ...c.runnerTestOpts,
-        ],
+        {
+            duneCmd: cmd.duneCmd,
+            args: [
+                c.duneExecArg,
+                cmd.runner,
+                "--",
+                c.runnerTestArg,
+                ...cmd.tests,
+                ...c.runnerTestOpts,
+            ],
+        },
         // eslint-disable-next-line no-magic-numbers
         2.5
     );
@@ -361,11 +370,15 @@ export async function runRunnerTestsDune(
 /**
  * Run all known tests using `dune runtest` and return its output.
  * @param root The current working directory for the dune command.
+ * @param duneCmd The command to call dune with.
  * @returns The output of `dune test` called in the directory `root`.
  */
-export async function runDuneTests(root: vscode.WorkspaceFolder) {
+export async function runDuneTests(
+    root: vscode.WorkspaceFolder,
+    duneCmd: string
+) {
     // eslint-disable-next-line no-magic-numbers
-    return runDuneCommand(root, [c.duneAllTestArg], 2.5);
+    return runDuneCommand(root, { duneCmd, args: [c.duneAllTestArg] }, 2.5);
 }
 
 /**
@@ -384,16 +397,20 @@ export async function runDuneTests(root: vscode.WorkspaceFolder) {
  * If 'dune --version' could be parsed, a message is returned in the field
  * `stdout`.
  * @param root The working directory for dune to use.
+ * @param duneCmd The command to call dune with.
  * @returns A message suitable to be logged is returned in `error`, `stderr` or
  * `stdout`.
  */
-export async function checkDune(root: vscode.WorkspaceFolder): Promise<Output> {
+export async function checkDune(
+    root: vscode.WorkspaceFolder,
+    duneCmd: string
+): Promise<Output> {
     const {
         stdout: duneVersion,
         stderr: duneStderr,
         error: cmdError,
         // eslint-disable-next-line no-magic-numbers
-    } = await runDuneCommand(root, [c.duneVersionArg], 2.5);
+    } = await runDuneCommand(root, { duneCmd, args: [c.duneVersionArg] }, 2.5);
     if (cmdError) {
         return {
             error: `Error calling ${c.duneCmd} in ${root.uri.path}, can't use dune! Error message: """${cmdError}"""`,

@@ -161,6 +161,16 @@ export const cfgTestDir = "testDirectories";
 export const cfgDefaultTestDir = ["test", "tests"];
 
 /**
+ * The path of the Dune Executable.
+ */
+export const cfgDunePath = "dunePath";
+
+/**
+ * The default value for the Dune path.
+ */
+export const cfgDefaultDunePath = duneCmd;
+
+/**
  * Return the configuration value for `testDirectories`.
  *
  * @param config The configuration object to use.
@@ -168,4 +178,14 @@ export const cfgDefaultTestDir = ["test", "tests"];
  */
 export function getCfgTestDirs(config: vscode.WorkspaceConfiguration) {
     return config.get<string[]>(cfgTestDir) || cfgDefaultTestDir;
+}
+
+/**
+ * Return the configuration value for `dunePath`.
+ *
+ * @param config The configuration object to use.
+ * @returns The configuration value for `dunePath`.
+ */
+export function getCfgDunePath(config: vscode.WorkspaceConfiguration) {
+    return config.get<string>(cfgDunePath) || cfgDefaultDunePath;
 }

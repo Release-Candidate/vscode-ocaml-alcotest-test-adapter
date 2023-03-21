@@ -1,7 +1,7 @@
 {
     "name": "vscode-ocaml-alcotest-test-adapter",
     "displayName": "OCaml Alcotest Test Explorer",
-    "version": "0.5.0",
+    "version": "0.6.0",
     "preview": false,
     "publisher": "release-candidate",
     "description": "Support for OCaml Alcotest and Alcotest inline PPX tests.",
@@ -67,6 +67,11 @@
                         "tests"
                     ],
                     "markdownDescription": "Directories to search for test sources. Must be relative paths."
+                },
+                "alcotest.dunePath": {
+                    "type": "string",
+                    "default": "dune",
+                    "markdownDescription": "Path to the Dune executable `dune`, if `opam env` doesn't yield the right one. Can be either an absolute or a path relative to the project's root. Default: `dune`, use the one in the current Opam environment."
                 }
             }
         }

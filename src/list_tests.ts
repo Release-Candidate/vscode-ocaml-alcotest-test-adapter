@@ -54,12 +54,16 @@ export async function addTests(
  */
 // eslint-disable-next-line max-statements
 async function addWorkspaceTests(env: h.Env, root: vscode.WorkspaceFolder) {
-    await setOpamEnv(root);
+    await setOpamEnv(env, root);
 
     // eslint-disable-next-line @typescript-eslint/no-extra-parens
     if (!(await h.isDuneWorking(root, env))) {
-        vscode.window.showWarningMessage(
-            `Error: Dune command 'dune' is not working in ${root.name}.\nSee the 'Output' window view of 'Alcotest Tests' for details.`
+        vscode.window.showErrorMessage(
+            `Error: Dune command '${c.getCfgDunePath(
+                env.config
+            )}' is not working in ${
+                root.name
+            }.\nSee the 'Output' window view of 'Alcotest Tests' for details.`
         );
         return [];
     }
@@ -96,12 +100,16 @@ async function addWorkspaceTests(env: h.Env, root: vscode.WorkspaceFolder) {
 
 /**
  * Run `opam env`, parse its output and set the environment accordingly.
+ * @param env The extension's environment.
  * @param root The working directory for `opam`.
  */
-async function setOpamEnv(root: vscode.WorkspaceFolder) {
+async function setOpamEnv(env: h.Env, root: vscode.WorkspaceFolder) {
     const opamEnv = await io.opamEnv(root);
     for (const oEnv of opamEnv) {
         process.env[oEnv.name] = oEnv.value;
+        env.outChannel.appendLine(
+            `Workspace ${root.name}: adding env: ${oEnv.name} ${oEnv.value}`
+        );
     }
 }
 
@@ -217,9 +225,14 @@ async function generateTestList(
     }
 ) {
     const toDelete: vscode.TestItem[] = [];
+    const checkGroups = [];
     for (const rPath of data.runnerPaths) {
         // eslint-disable-next-line no-await-in-loop
-        const out = await io.runRunnerListDune(data.root, rPath);
+        const out = await io.runRunnerListDune(
+            data.root,
+            c.getCfgDunePath(env.config),
+            rPath
+        );
         env.outChannel.appendLine(
             `Test runner: ${rPath}\nList of tests:\n${out.stdout}\nStderr: ${
                 out.stderr
@@ -227,17 +240,44 @@ async function generateTestList(
         );
 
         if (out.stdout) {
-            toDelete.push(
-                // eslint-disable-next-line @typescript-eslint/no-extra-parens, no-await-in-loop
-                ...(await parseTestListOutput(env, {
+            // eslint-disable-next-line no-await-in-loop
+            const { toDelete: retDel, groups } = await parseTestListOutput(
+                env,
+                {
                     root: data.root,
                     suiteLabel: data.suiteLabel,
                     workspaceItem: data.workspaceItem,
                     listOutput: out.stdout,
                     rPath,
-                }))
+                }
             );
+            toDelete.push(...retDel);
+            checkGroups.push(...groups);
         }
+    }
+    return checkAndDeleteGroups(data, toDelete, checkGroups);
+}
+
+/**
+ * Checks the given list of tests parsed from the test runners output.
+ * If any of the test groups in the test suite does not exist, delete it and add
+ * it to the list of `TestItem`s to delete.
+ * @param data The data needed for the function.
+ * @param toDelete The list of `TestItem`s to append items to delete to.
+ * @param checkGroups The list of tests parsed from the output of all test runners.
+ * @returns The list of `TestItems` that have been deleted.
+ */
+function checkAndDeleteGroups(
+    data: {
+        workspaceItem: vscode.TestItem;
+        suiteLabel: string;
+    },
+    toDelete: vscode.TestItem[],
+    checkGroups: { name: string; tests: p.TestType[] }[]
+) {
+    const suiteItem = data.workspaceItem.children.get(data.suiteLabel);
+    if (suiteItem) {
+        toDelete.push(...deleteNonExistingGroups(suiteItem, checkGroups));
     }
     return toDelete;
 }
@@ -269,8 +309,6 @@ async function parseTestListOutput(
     const toDelete: vscode.TestItem[] = [];
     const groups = p.parseTestList(data.listOutput);
 
-    toDelete.push(...deleteNonExistingGroups(suiteItem, groups));
-
     for (const group of groups) {
         // eslint-disable-next-line no-await-in-loop
         const sourcePath = await io.findSourceOfTest(
@@ -298,7 +336,7 @@ async function parseTestListOutput(
 
         toDelete.push(...deleteNonExisting(group, groupItem, env));
     }
-    return toDelete;
+    return { toDelete, groups };
 }
 
 /**
@@ -306,26 +344,26 @@ async function parseTestListOutput(
  * been deleted and delete these groups.
  * That is, the group is not in the list of groups but is a children of the
  * suite node.
- * @param suiteItem The test suite the test belong to.
+ * @param groupItem The test group the test belong to.
  * @param groups The list of groups to check.
  * @returns The list of `TestItems` that have been deleted from the Test
  * Explorer tree.
  */
 function deleteNonExistingGroups(
-    suiteItem: vscode.TestItem,
+    groupItem: vscode.TestItem,
     groups: { name: string; tests: p.TestType[] }[]
 ) {
-    const suiteGroups: vscode.TestItem[] = [];
-    suiteItem.children.forEach((e) => suiteGroups.push(e));
-    const toDelete = suiteGroups.filter(
+    const itemsToCheck: vscode.TestItem[] = [];
+    groupItem.children.forEach((e) => itemsToCheck.push(e));
+    const toDelete = itemsToCheck.filter(
         (e) => !groups.find((v) => v.name === e.id)
     );
 
     toDelete.forEach((e) => {
         e.children.forEach((ch) => {
-            suiteItem.children.delete(ch.id);
+            groupItem.children.delete(ch.id);
         });
-        suiteItem.children.delete(e.id);
+        groupItem.children.delete(e.id);
     });
 
     return toDelete;
