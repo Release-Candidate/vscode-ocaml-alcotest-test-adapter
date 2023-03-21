@@ -6,6 +6,7 @@
 [![Visual Studio Marketplace Downloads](https://img.shields.io/visual-studio-marketplace/d/Release-Candidate.vscode-ocaml-alcotest-test-adapter)](https://marketplace.visualstudio.com/items?itemName=release-candidate.vscode-ocaml-alcotest-test-adapter)
 [![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/Release-Candidate.vscode-ocaml-alcotest-test-adapter)](https://marketplace.visualstudio.com/items?itemName=release-candidate.vscode-ocaml-alcotest-test-adapter)
 [![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/Release-Candidate.vscode-ocaml-alcotest-test-adapter)](https://marketplace.visualstudio.com/items?itemName=release-candidate.vscode-ocaml-alcotest-test-adapter)
+[![Open VSX Version](https://img.shields.io/open-vsx/v/Release-Candidate/vscode-ocaml-alcotest-test-adapter)](https://open-vsx.org/extension/Release-Candidate/vscode-ocaml-alcotest-test-adapter)
 
 ![Alcotest logo](./images/alcotest-logo_rect.png)
 
@@ -40,11 +41,13 @@ This extension lets you run OCaml [Alcotests](https://github.com/mirage/alcotest
 - filtering of tests by name
 - parses the test list output of the test runners to fill the Test Explorer view: faster than grepping every source file for test cases and the test tree view is consistent with the test runners
 - support for multiple workspaces
+- retries running dune if another instance has locked the project until dune can acquire the lock
 - Uses VS Code's native Test Explorer (no additional extension needed)
 
 ### Drawbacks
 
 - needs dune
+- retries running dune if another instance has locked the project until dune can acquire the lock - may loop forever.
 - test case names are truncated by the Alcotest test runners
 - the assumption is that all test cases of a test are contained in the same source file
 - the name of the tests is searched for in source files, so the source's location can be off from the real definition
@@ -68,6 +71,7 @@ This extension lets you run OCaml [Alcotests](https://github.com/mirage/alcotest
 Either
 
 - install the extension directly from the Visual Studio Code Marketplace [Alcotest Test Explorer](https://marketplace.visualstudio.com/items?itemName=release-candidate.vscode-ocaml-alcotest-test-adapter)
+- install the extension directly from the Open VSX Registry [Alcotest Test Explorer](https://open-vsx.org/extension/Release-Candidate/vscode-ocaml-alcotest-test-adapter)
 - or download the extension from the [latest release at GitHub](https://github.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter/releases/latest)
 - or build the extension yourself by cloning the [GitHub Repository](https://github.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter) and running `yarn install` and `yarn package` in the root directory of the cloned repo.
 
@@ -129,6 +133,7 @@ A: Because I am only grepping for the test case name all the tests are mapped to
 ## Configuration
 
 - `alcotest.testDirectories` - Array of strings containing the relative (to the workspace root directory) paths to the test directories to search for dune configuration files. The default is `[ "test", "tests"]`. If your dune test configuration files are contained other directories, add these directories to this list.
+- `alcotest.dunePath` - Set an absolute path or a path relative to the project root of the Dune executable. Default: `dune` - use the one in the local Opam environment or in `PATH`.
 
 ## Changes
 

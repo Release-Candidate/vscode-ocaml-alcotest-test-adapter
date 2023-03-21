@@ -10,6 +10,7 @@
  * Helper functions to deal with the extension API.
  */
 
+import * as c from "./constants";
 import * as io from "./osInteraction";
 import * as p from "./parsing";
 import * as vscode from "vscode";
@@ -120,15 +121,12 @@ export async function setSourceLocation(
  * @returns `true`, if the dune command is working in directory `root`, `false`
  * else.
  */
-export async function isDuneWorking(
-    root: vscode.WorkspaceFolder,
-    env: { outChannel: vscode.OutputChannel }
-) {
+export async function isDuneWorking(root: vscode.WorkspaceFolder, env: Env) {
     const {
         stdout: duneStdout,
         stderr: duneStderr,
         error: duneError,
-    } = await io.checkDune(root);
+    } = await io.checkDune(root, c.getCfgDunePath(env.config));
     if (duneError) {
         env.outChannel.appendLine(duneError);
         return false;

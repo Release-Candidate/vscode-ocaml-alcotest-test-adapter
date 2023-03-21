@@ -59,32 +59,61 @@ async function setupExtension(
     );
     context.subscriptions.push(controller);
 
+    const env = { config, controller, outChannel, testData };
+
     const runProfile = controller.createRunProfile(
         c.runProfileLabel,
         vscode.TestRunProfileKind.Run,
-        (r, tok) =>
-            rt.runHandler({ config, controller, outChannel, testData }, r, tok)
+        (r, tok) => rt.runHandler(env, r, tok)
     );
     context.subscriptions.push(runProfile);
 
+    setupSubscriptions(env, context);
+
+    await t.addTests(env, h.workspaceFolders());
+}
+
+/**
+ * Set up subscriptions to various events.
+ * @param env The extension's environment.
+ * @param context The extension's context.
+ */
+function setupSubscriptions(env: h.Env, context: vscode.ExtensionContext) {
     // eslint-disable-next-line no-unused-vars
-    controller.refreshHandler = async (_) => {
-        t.addTests(
-            { config, controller, outChannel, testData },
-            h.workspaceFolders()
-        );
+    env.controller.refreshHandler = async (_) => {
+        t.addTests(env, h.workspaceFolders());
     };
+
+    const configDisposable = vscode.workspace.onDidChangeConfiguration((e) =>
+        configChanged(env, e)
+    );
+    context.subscriptions.push(configDisposable);
 
     const disposable = vscode.workspace.onDidChangeWorkspaceFolders(
         async (e) => {
-            t.addTests({ config, controller, outChannel, testData }, e.added);
-            e.removed.map((r) => controller.items.delete(r.name));
+            t.addTests(env, e.added);
+            e.removed.map((r) => env.controller.items.delete(r.name));
         }
     );
     context.subscriptions.push(disposable);
+}
 
-    await t.addTests(
-        { config, controller, outChannel, testData },
-        h.workspaceFolders()
-    );
+/**
+ * Called, if the configuration has changed.
+ * @param env The extension's environment.
+ * @param e The change event.
+ */
+function configChanged(env: h.Env, e: vscode.ConfigurationChangeEvent) {
+    if (e.affectsConfiguration(c.cfgSection)) {
+        env.outChannel.appendLine(`Config changed!`);
+        vscode.window
+            .showInformationMessage(
+                "The configuration has changed!\nReload the window for the changes to take effect.",
+                "Reload Now"
+            )
+            // eslint-disable-next-line no-unused-vars
+            .then((_) =>
+                vscode.commands.executeCommand("workbench.action.reloadWindow")
+            );
+    }
 }
