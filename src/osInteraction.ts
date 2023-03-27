@@ -271,26 +271,47 @@ export async function opamEnv(root: vscode.WorkspaceFolder) {
 /**
  * This is a wrapper around `runCommand`, to retry running dune if another dune
  * process holds the lock file.
- * @param root The current working directory to use for dune.
+ * @param data.token Either an `CancellationToken` if this run can be cancelled or
+ * `undefined`, if this run cannot the cancelled.
+ * @param data.root The current working directory to use for dune.
+ * @param data.sleepTime The time to sleep in seconds between each successive try of
  * @param cmd Command and arguments to call dune with.
- * @param sleepTime The time to sleep in seconds between each successive try of
  * acquiring the dune lock.
  * @returns The output of the dune command.
  */
+// eslint-disable-next-line max-statements
 async function runDuneCommand(
-    root: vscode.WorkspaceFolder,
+    data: {
+        token: vscode.CancellationToken | undefined;
+        root: vscode.WorkspaceFolder;
+        sleepTime: number;
+    },
     cmd: { duneCmd: string; args: string[] },
-    sleepTime: number
+    loopNum?: number
 ): Promise<Output> {
-    const out = await runCommand(root, cmd.duneCmd, cmd.args);
+    if (data.token?.isCancellationRequested) {
+        return { stderr: undefined, stdout: "" };
+    }
+    // eslint-disable-next-line no-magic-numbers
+    if (loopNum && loopNum > 12) {
+        const answer = await vscode.window.showErrorMessage(
+            `Error. Could not acquire Dune lock. Another Dune process is holding the directory lock!`,
+            "Cancel",
+            "Retry"
+        );
+        if (answer === "Cancel") {
+            return { error: "Error: Dune lock could not be acquired!" };
+        } else {
+            return runDuneCommand(data, cmd);
+        }
+    }
+    const out = await runCommand(data.root, cmd.duneCmd, cmd.args);
     if (out.stderr) {
         if (parse.isDuneLocked(out.stderr)) {
             // eslint-disable-next-line no-magic-numbers
-            await sleep(sleepTime * 1000);
-            return runDuneCommand(root, cmd, sleepTime);
+            await sleep(data.sleepTime * 1000);
+            return runDuneCommand(data, cmd, loopNum ? loopNum + 1 : 1);
         }
-    } else {
-        return out;
     }
 
     /**
@@ -312,21 +333,29 @@ async function runDuneCommand(
  * Set `root` as the working directory of the command.
  * The test list output is contained in `stdout`, `stderr` should be the empty
  * string und `error` should be `undefined`. See {@link Output}
- * @param root The current working directory for the dune command.
- * @param duneCmd The command to call dune with.
- * @param runner The path to the runner to execute.
+ * @param data.token Either an `CancellationToken` if this run can be cancelled
+ * or `undefined`, if this run cannot the cancelled.
+ * @param data.root The current working directory for the dune command.
+ * @param data.duneCmd The command to call dune with.
+ * @param data.runner The path to the runner to execute.
  * @returns The output of the test runner in the `stdout` field.
  */
-export async function runRunnerListDune(
-    root: vscode.WorkspaceFolder,
-    duneCmd: string,
-    runner: string
-) {
+export async function runRunnerListDune(data: {
+    token: vscode.CancellationToken | undefined;
+    root: vscode.WorkspaceFolder;
+    duneCmd: string;
+    runner: string;
+}) {
     return runDuneCommand(
-        root,
-        { duneCmd, args: [c.duneExecArg, runner, "--", ...c.runnerListOpts] },
-        // eslint-disable-next-line no-magic-numbers
-        2.5
+        {
+            token: data.token,
+            root: data.root,
+            sleepTime: 2.5,
+        },
+        {
+            duneCmd: data.duneCmd,
+            args: [c.duneExecArg, data.runner, "--", ...c.runnerListOpts],
+        }
     );
 }
 
@@ -335,6 +364,8 @@ export async function runRunnerListDune(
  * using dune and return its output.
  * Set `root` as the working directory of the command.
  * `{ stdout; stderr; error }` is returned, see {@link Output}.
+ * @param token Either an `CancellationToken` if this run can be cancelled or
+ * `undefined`, if this run cannot the cancelled.
  * @param root The current working directory for the dune command.
  * @param cmd.duneCmd The command to call dune with.
  * @param cmd.runner The path to the runner to execute.
@@ -342,6 +373,7 @@ export async function runRunnerListDune(
  * @returns The output of the test runner.
  */
 export async function runRunnerTestsDune(
+    token: vscode.CancellationToken | undefined,
     root: vscode.WorkspaceFolder,
     cmd: {
         duneCmd: string;
@@ -350,7 +382,11 @@ export async function runRunnerTestsDune(
     }
 ) {
     return runDuneCommand(
-        root,
+        {
+            token,
+            root,
+            sleepTime: 2.5,
+        },
         {
             duneCmd: cmd.duneCmd,
             args: [
@@ -361,24 +397,27 @@ export async function runRunnerTestsDune(
                 ...cmd.tests,
                 ...c.runnerTestOpts,
             ],
-        },
-        // eslint-disable-next-line no-magic-numbers
-        2.5
+        }
     );
 }
 
 /**
  * Run all known tests using `dune runtest` and return its output.
+ * @param token Either an `CancellationToken` if this run can be cancelled or
+ * `undefined`, if this run cannot the cancelled.
  * @param root The current working directory for the dune command.
  * @param duneCmd The command to call dune with.
  * @returns The output of `dune test` called in the directory `root`.
  */
 export async function runDuneTests(
+    token: vscode.CancellationToken | undefined,
     root: vscode.WorkspaceFolder,
     duneCmd: string
 ) {
-    // eslint-disable-next-line no-magic-numbers
-    return runDuneCommand(root, { duneCmd, args: [c.duneAllTestArg] }, 2.5);
+    return runDuneCommand(
+        { token, root, sleepTime: 2.5 },
+        { duneCmd, args: [c.duneAllTestArg] }
+    );
 }
 
 /**
@@ -396,12 +435,15 @@ export async function runDuneTests(
  * can be used.
  * If 'dune --version' could be parsed, a message is returned in the field
  * `stdout`.
+ * @param token Either an `CancellationToken` if this run can be cancelled or
+ * `undefined`, if this run cannot the cancelled.
  * @param root The working directory for dune to use.
  * @param duneCmd The command to call dune with.
  * @returns A message suitable to be logged is returned in `error`, `stderr` or
  * `stdout`.
  */
 export async function checkDune(
+    token: vscode.CancellationToken | undefined,
     root: vscode.WorkspaceFolder,
     duneCmd: string
 ): Promise<Output> {
@@ -409,8 +451,10 @@ export async function checkDune(
         stdout: duneVersion,
         stderr: duneStderr,
         error: cmdError,
-        // eslint-disable-next-line no-magic-numbers
-    } = await runDuneCommand(root, { duneCmd, args: [c.duneVersionArg] }, 2.5);
+    } = await runDuneCommand(
+        { token, root, sleepTime: 2.5 },
+        { duneCmd, args: [c.duneVersionArg] }
+    );
     if (cmdError) {
         return {
             error: `Error calling ${c.duneCmd} in ${root.uri.path}, can't use dune! Error message: """${cmdError}"""`,

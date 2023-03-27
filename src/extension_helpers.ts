@@ -126,7 +126,7 @@ export async function isDuneWorking(root: vscode.WorkspaceFolder, env: Env) {
         stdout: duneStdout,
         stderr: duneStderr,
         error: duneError,
-    } = await io.checkDune(root, c.getCfgDunePath(env.config));
+    } = await io.checkDune(undefined, root, c.getCfgDunePath(env.config));
     if (duneError) {
         env.outChannel.appendLine(duneError);
         return false;

@@ -74,6 +74,12 @@
             "task": "lint-github",
             "problemMatcher": [],
             "label": "yarn: lint-github"
+        },
+        {
+            "type": "yarn",
+            "task": "publish-ovsx",
+            "problemMatcher": [],
+            "label": "yarn: publish-ovsx"
         }
     ]
 }

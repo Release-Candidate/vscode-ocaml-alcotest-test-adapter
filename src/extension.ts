@@ -70,7 +70,7 @@ async function setupExtension(
 
     setupSubscriptions(env, context);
 
-    await t.addTests(env, h.workspaceFolders());
+    await t.addTests(env, h.workspaceFolders(), undefined);
 }
 
 /**
@@ -81,7 +81,7 @@ async function setupExtension(
 function setupSubscriptions(env: h.Env, context: vscode.ExtensionContext) {
     // eslint-disable-next-line no-unused-vars
     env.controller.refreshHandler = async (_) => {
-        t.addTests(env, h.workspaceFolders());
+        t.addTests(env, h.workspaceFolders(), undefined);
     };
 
     const configDisposable = vscode.workspace.onDidChangeConfiguration((e) =>
@@ -91,7 +91,7 @@ function setupSubscriptions(env: h.Env, context: vscode.ExtensionContext) {
 
     const disposable = vscode.workspace.onDidChangeWorkspaceFolders(
         async (e) => {
-            t.addTests(env, e.added);
+            t.addTests(env, e.added, undefined);
             e.removed.map((r) => env.controller.items.delete(r.name));
         }
     );

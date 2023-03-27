@@ -20,19 +20,23 @@ import path = require("path");
 /**
  * Add all tests of all workspaces to the Test Explorer.
  * @param env The extension's environment.
+ * @param roots The list of workspaces.
+ * @param token The `CancellationToken`. Whether the user wants to cancel the
+ * test runs.
  * @returns The list of `TestItems` that have been deleted from the Test
  * Explorer tree.
  */
 export async function addTests(
     env: h.Env,
-    roots: readonly vscode.WorkspaceFolder[]
+    roots: readonly vscode.WorkspaceFolder[],
+    token: vscode.CancellationToken | undefined
 ) {
     env.outChannel.appendLine("Adding new tests ...");
 
     const promises = [];
     for (const root of roots) {
         env.outChannel.appendLine(`Processing workspace ${root.name}`);
-        promises.push(addWorkspaceTests(env, root));
+        promises.push(addWorkspaceTests(env, root, token));
     }
 
     const toDeleteArray = await Promise.allSettled(promises);
@@ -52,8 +56,12 @@ export async function addTests(
  * @returns The list of `TestItems` that have been deleted from the Test
  * Explorer tree.
  */
-// eslint-disable-next-line max-statements
-async function addWorkspaceTests(env: h.Env, root: vscode.WorkspaceFolder) {
+// eslint-disable-next-line max-statements, max-lines-per-function
+async function addWorkspaceTests(
+    env: h.Env,
+    root: vscode.WorkspaceFolder,
+    token: vscode.CancellationToken | undefined
+) {
     await setOpamEnv(env, root);
 
     // eslint-disable-next-line @typescript-eslint/no-extra-parens
@@ -71,10 +79,14 @@ async function addWorkspaceTests(env: h.Env, root: vscode.WorkspaceFolder) {
     const workspaceItem = getWorkspaceItem();
     env.controller.items.add(workspaceItem);
     const toDelete: vscode.TestItem[] = [];
-    // eslint-disable-next-line @typescript-eslint/no-extra-parens
-    toDelete.push(...(await addInlineTests(env, root, workspaceItem)));
-    // eslint-disable-next-line @typescript-eslint/no-extra-parens
-    toDelete.push(...(await addNormalTests(env, root, workspaceItem)));
+    toDelete.push(
+        // eslint-disable-next-line @typescript-eslint/no-extra-parens
+        ...(await addInlineTests(env, { root, token, workspaceItem }))
+    );
+    toDelete.push(
+        // eslint-disable-next-line @typescript-eslint/no-extra-parens
+        ...(await addNormalTests(env, { root, token, workspaceItem }))
+    );
 
     return toDelete;
 
@@ -116,17 +128,22 @@ async function setOpamEnv(env: h.Env, root: vscode.WorkspaceFolder) {
 /**
  * Add 'normal', that is, not inline tests to the Test Explorer.
  * @param env Everything needed to add these tests.
- * @param root The workspace to add the tests to and from.
- * @param workspaceItem The parent node of the workspace's test tree in the Test
- * Explorer.
+ * @param data.root The workspace to add the tests to and from.
+ * @param data.token The `CancellationToken`. Whether the user wants to cancel
+ * the test runs.
+ * @param data.workspaceItem The parent node of the workspace's test tree in the
+ * Test Explorer.
  */
 async function addNormalTests(
     env: h.Env,
-    root: vscode.WorkspaceFolder,
-    workspaceItem: vscode.TestItem
+    data: {
+        root: vscode.WorkspaceFolder;
+        token: vscode.CancellationToken | undefined;
+        workspaceItem: vscode.TestItem;
+    }
 ) {
     const testDirs = await io.filterExistingDirs(
-        root,
+        data.root,
         c.getCfgTestDirs(env.config)
     );
     const duneGlobs = testDirs.map((d) =>
@@ -135,17 +152,18 @@ async function addNormalTests(
     const duneFiles: string[] = [];
     for (const glob of duneGlobs) {
         // eslint-disable-next-line @typescript-eslint/no-extra-parens, no-await-in-loop
-        duneFiles.push(...(await io.findFilesRelative(root, glob)));
+        duneFiles.push(...(await io.findFilesRelative(data.root, glob)));
     }
     const runnerPaths: string[] = await parseDuneFiles(
         duneFiles,
         env.outChannel,
-        root
+        data.root
     );
     return generateTestList(env, {
-        root,
+        root: data.root,
         runnerPaths,
-        workspaceItem,
+        token: data.token,
+        workspaceItem: data.workspaceItem,
         suiteLabel: c.testControllerLabel,
     });
 }
@@ -153,24 +171,33 @@ async function addNormalTests(
 /**
  * Add all inline (PPX) test of the workspace `root`.
  * @param env Everything needed to add these tests.
- * @param root The workspace to add the tests to and from.
- * @param workspaceItem The parent of the test tree in the Test Explorer view.
- * @returns The list of `TestItems` that have been deleted from the Test
+ * @param data.root The workspace to add the tests to and from.
+ * @param data.token The `CancellationToken`. Whether the user wants to cancel
+ * the test runs.
+ * @param data.workspaceItem The parent of the test tree in the Test Explorer
+ * view. @returns The list of `TestItems` that have been deleted from the Test
  * Explorer tree.
  */
 async function addInlineTests(
     env: h.Env,
-    root: vscode.WorkspaceFolder,
-    workspaceItem: vscode.TestItem
+    data: {
+        root: vscode.WorkspaceFolder;
+        token: vscode.CancellationToken | undefined;
+        workspaceItem: vscode.TestItem;
+    }
 ) {
-    const inlineRunnerPaths = await io.findFilesRelative(root, c.runnerExeGlob);
+    const inlineRunnerPaths = await io.findFilesRelative(
+        data.root,
+        c.runnerExeGlob
+    );
     const justBuildPaths = inlineRunnerPaths.filter(
         (pa) => !pa.includes(c.sandboxDir)
     );
     return generateTestList(env, {
         runnerPaths: justBuildPaths,
-        root,
-        workspaceItem,
+        root: data.root,
+        token: data.token,
+        workspaceItem: data.workspaceItem,
         suiteLabel: c.inlineTestsLabel,
     });
 }
@@ -215,11 +242,13 @@ async function parseDuneFiles(
  * @returns The list of `TestItems` that have been deleted from the Test
  * Explorer tree.
  */
+// eslint-disable-next-line max-statements
 async function generateTestList(
     env: h.Env,
     data: {
         runnerPaths: string[];
         root: vscode.WorkspaceFolder;
+        token: vscode.CancellationToken | undefined;
         workspaceItem: vscode.TestItem;
         suiteLabel: string;
     }
@@ -227,12 +256,14 @@ async function generateTestList(
     const toDelete: vscode.TestItem[] = [];
     const checkGroups = [];
     for (const rPath of data.runnerPaths) {
+        env.outChannel.appendLine(`Starting test runner ${rPath}`);
         // eslint-disable-next-line no-await-in-loop
-        const out = await io.runRunnerListDune(
-            data.root,
-            c.getCfgDunePath(env.config),
-            rPath
-        );
+        const out = await io.runRunnerListDune({
+            token: data.token,
+            root: data.root,
+            duneCmd: c.getCfgDunePath(env.config),
+            runner: rPath,
+        });
         env.outChannel.appendLine(
             `Test runner: ${rPath}\nList of tests:\n${out.stdout}\nStderr: ${
                 out.stderr
