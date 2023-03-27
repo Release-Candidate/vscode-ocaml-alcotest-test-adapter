@@ -29,6 +29,7 @@ This extension lets you run OCaml [Alcotests](https://github.com/mirage/alcotest
     - [Q: What does the red circle with a dot in the middle mean?](#q-what-does-the-red-circle-with-a-dot-in-the-middle-mean)
     - [Q: Where can I see the log of the extension?](#q-where-can-i-see-the-log-of-the-extension)
     - [Q: I have two or more test cases with the same name in the same file, why are they all pointing to the first test case in the source file?](#q-i-have-two-or-more-test-cases-with-the-same-name-in-the-same-file-why-are-they-all-pointing-to-the-first-test-case-in-the-source-file)
+    - [Q: Why does the extension not work when using Dune in watch-mode `dune -w | --watch` or `dune ... --passive-watch`?](#q-why-does-the-extension-not-work-when-using-dune-in-watch-mode-dune--w----watch-or-dune----passive-watch)
 - [Configuration](#configuration)
 - [Changes](#changes)
 - [Contributing](#contributing)
@@ -41,13 +42,12 @@ This extension lets you run OCaml [Alcotests](https://github.com/mirage/alcotest
 - filtering of tests by name
 - parses the test list output of the test runners to fill the Test Explorer view: faster than grepping every source file for test cases and the test tree view is consistent with the test runners
 - support for multiple workspaces
-- retries running dune if another instance has locked the project until dune can acquire the lock
+- retries running dune if another instance has locked the project until dune can acquire the lock or a timeout occurred
 - Uses VS Code's native Test Explorer (no additional extension needed)
 
 ### Drawbacks
 
 - needs dune
-- retries running dune if another instance has locked the project until dune can acquire the lock - may loop forever.
 - test case names are truncated by the Alcotest test runners
 - the assumption is that all test cases of a test are contained in the same source file
 - the name of the tests is searched for in source files, so the source's location can be off from the real definition
@@ -82,6 +82,24 @@ The version 0.1.0 has support for VS Code versions >= 1.59 and can be downloaded
 Support for versions of VS Code older than 1.65 has been dropped with version 0.2.0 of the Extension because of the support for the **refresh** button in the Test Explorer view ([Testing refresh action](https://code.visualstudio.com/updates/v1_65#_testing-refresh-action-and-sorttext)).
 
 ### Q & A
+
+[Q: What do the groups in the Test Explorer view mean?](#q-what-do-the-groups-in-the-test-explorer-view-mean)
+
+[Q: A test has been added, how can I add that to the Test Explorer?](#q-a-test-has-been-added-how-can-i-add-that-to-the-test-explorer)
+
+[Q: I am not seeing the full name of my test case, why?](#q-i-am-not-seeing-the-full-name-of-my-test-case-why)
+
+[Q: Where can I see the output of the test run(s)?](#q-where-can-i-see-the-output-of-the-test-runs)
+
+[Q: How can I change which test extension's tests are run by the `Run Tests` button in the upper right of the Test Explorer?](#q-how-can-i-change-which-test-extensions-tests-are-run-by-the-run-tests-button-in-the-upper-right-of-the-test-explorer)
+
+[Q: What does the red circle with a dot in the middle mean?](#q-what-does-the-red-circle-with-a-dot-in-the-middle-mean)
+
+[Q: Where can I see the log of the extension?](#q-where-can-i-see-the-log-of-the-extension)
+
+[Q: I have two or more test cases with the same name in the same file, why are they all pointing to the first test case in the source file?](#q-i-have-two-or-more-test-cases-with-the-same-name-in-the-same-file-why-are-they-all-pointing-to-the-first-test-case-in-the-source-file)
+
+[Q: Why does the extension not work when using Dune in watch-mode `dune -w | --watch` or `dune ... --passive-watch`?](#q-why-does-the-extension-not-work-when-using-dune-in-watch-mode-dune--w----watch-or-dune----passive-watch)
 
 #### Q: What do the groups in the Test Explorer view mean?
 
@@ -129,6 +147,18 @@ A: In the `OUTPUT` tab of the Panel, you have to select the extension named `Alc
 
 A: Because I am only grepping for the test case name all the tests are mapped to the first test case in the source. By right clicking the test run symbol in the source view you can run any of these instead of all at the same time (three test cases with name `-42` in the image). In Test Explorer tree they are separate nodes.
 ![Three tests with the same name in the same file](https://raw.githubusercontent.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter/main/images/same_name.png)
+
+#### Q: Why does the extension not work when using Dune in watch-mode `dune -w | --watch` or `dune ... --passive-watch`?
+
+![Lock error window](https://raw.githubusercontent.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter/main/images/lock_error.png)
+
+A: Dune uses a file lock (default path: `_build/.lock`) to coordinate multiple Dune processes. Dune in watch mode does not release the file lock at all, so no other Dune process can run at the same time.
+The meaning of the two buttons in the error message is:
+
+- `Cancel` - stop the running Dune process: cancels running Dune, but the extension is **not** going to work until the other Dune process releases the lock.
+- `Retry` - retry running Dune: Either stop the Dune process in watch mode or wait until all other Dune processes have finished their work. If no other Dune process is running, click `Retry`.
+
+For a future version of Dune the plan is to be able to use the Dune process in watch mode with another dune running e.g. `dune [rpc] exec` and get the output on the 'client' Dune process.
 
 ## Configuration
 

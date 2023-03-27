@@ -25,6 +25,7 @@ import * as vscode from "vscode";
  * @param token The `CancellationToken`. Whether the user wants to cancel the
  * test runs.
  */
+// eslint-disable-next-line max-statements
 export async function runHandler(
     env: h.Env,
     request: vscode.TestRunRequest,
@@ -32,10 +33,11 @@ export async function runHandler(
 ) {
     const run = env.controller.createTestRun(request);
     setTestsStarted(env, request, run);
-    const toDelete = await checkForNewTests(env, request);
+    const toDelete = await checkForNewTests(env, token, request);
     const tests = t.testList(request, env.controller, toDelete);
 
     for (const test of tests) {
+        // eslint-disable-next-line no-negated-condition
         if (!token.isCancellationRequested) {
             const passEnv = {
                 config: env.config,
@@ -46,9 +48,15 @@ export async function runHandler(
             };
             passEnv.run = run;
             // eslint-disable-next-line no-await-in-loop
-            await runSingleTest(passEnv, test);
+            await runSingleTest(passEnv, token, test);
+        } else {
+            run.skipped(test);
         }
     }
+    if (token.isCancellationRequested) {
+        env.outChannel.appendLine(`Cancelling tests.`);
+    }
+
     run.end();
 }
 
@@ -72,24 +80,35 @@ function setTestsStarted(
  * Also removes deleted tests from the Test Explorer tree - if their parent is
  * included in the list of tests to run.
  * @param env The extension's environment.
+ * @param token The `CancellationToken`. Whether the user wants to cancel the
+ * test runs.
  * @param request The run request containing the list of tests to run.
  */
-async function checkForNewTests(env: h.Env, request: vscode.TestRunRequest) {
+async function checkForNewTests(
+    env: h.Env,
+    token: vscode.CancellationToken,
+    request: vscode.TestRunRequest
+) {
     const workspaces: vscode.WorkspaceFolder[] = [];
     if (request.include) {
         workspaces.push(...h.testItemsToWorkspaces(request.include));
     } else {
         workspaces.push(...h.workspaceFolders());
     }
-    return t.addTests(env, workspaces);
+    return t.addTests(env, workspaces, token);
 }
 
 /**
  * Run a single test and set the test's state.
  * @param env The environment needed to run a test.
+ * @param token Whether to cancel the test run or not.
  * @param test The test to run.
  */
-async function runSingleTest(env: h.Env, test: vscode.TestItem) {
+async function runSingleTest(
+    env: h.Env,
+    token: vscode.CancellationToken,
+    test: vscode.TestItem
+) {
     const ret = env.testData.get(test);
     env.outChannel.appendLine(
         `Running test "${test.parent ? test.parent.label : ""}   ${
@@ -100,7 +119,7 @@ async function runSingleTest(env: h.Env, test: vscode.TestItem) {
         const { root, runner } = ret;
         const startTime = Date.now();
         test.busy = true;
-        const out = await io.runRunnerTestsDune(root, {
+        const out = await io.runRunnerTestsDune(token, root, {
             duneCmd: c.getCfgDunePath(env.config),
             runner,
             tests: [`${test.parent?.label}`, `${test.id}`],
