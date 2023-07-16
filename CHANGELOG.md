@@ -1,5 +1,17 @@
 # OCaml Alcotest Test Explorer for Visual Studio Code Changelog
 
+## Version 0.8.0 (2023-07-16)
+
+- use newer versions of dependencies.
+
+### Bugfixes
+
+- Correctly parse test groups that have a number at the end of their name. This numbers have been wrongly parsed as test indices.
+
+### Internal Changes
+
+- make yarn configuration compatible with Yarn 3
+
 ## Version 0.7.0 (2023-03-27)
 
 - If the dune lock can't be acquired for 30s, raise an error window and ask the user what to do.

@@ -63,7 +63,7 @@ const duneTestRegex2 =
  * called `name`.
  * Ignores added (or not added) points at the end of the name.
  */
-const testListRegex = /^(?<group>\S+.*?)\s+(?<id>\d+)\s+(?<name>.*?)\.+$/gmu;
+const testListRegex = /^(?<group>\S+.*?)\s\s+(?<id>\d+)\s+(?<name>.*?)\.+$/gmu;
 
 /**
  * Regexp to parse Alcotest test results for errors.

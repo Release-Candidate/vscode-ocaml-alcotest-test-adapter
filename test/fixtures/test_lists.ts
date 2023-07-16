@@ -44,7 +44,7 @@ Big Step tests                  26   comment should be ignored.
 Environment Model tests          0   -42.
 Environment Model tests          1   4.2.
 Environment Model tests          2   11+11.
-Environment Model tests          3   11 -11.
+Environment Model tests 5        3   11 -11.
 Environment Model tests          4   11.+    11.
 Environment Model tests          5   11. -11.
 Environment Model tests          6   6* 6.
@@ -245,10 +245,6 @@ export const normalListObject = [
                 name: "11+11",
             },
             {
-                id: 3,
-                name: "11 -11",
-            },
-            {
                 id: 4,
                 name: "11.+    11",
             },
@@ -379,6 +375,15 @@ export const normalListObject = [
             {
                 id: 36,
                 name: "comment should be ignored",
+            },
+        ],
+    },
+    {
+        name: "Environment Model tests 5",
+        tests: [
+            {
+                id: 3,
+                name: "11 -11",
             },
         ],
     },
