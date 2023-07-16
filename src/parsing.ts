@@ -63,7 +63,7 @@ const duneTestRegex2 =
  * called `name`.
  * Ignores added (or not added) points at the end of the name.
  */
-const testListRegex = /^(?<group>\S+.*?)\s+(?<id>\d+)\s+(?<name>.*?)\.+$/gmu;
+const testListRegex = /^(?<group>\S+.*?)\s\s+(?<id>\d+)\s+(?<name>.*?)\.+$/gmu;
 
 /**
  * Regexp to parse Alcotest test results for errors.
@@ -191,7 +191,6 @@ export function getSourceRange(
 
 /**
  * Return the first location of `s` in `text`, as `Range`.
- *
  * @param r The regex to match.
  * @param text The text to search the string in.
  * @returns The first position of `r` in `text`.

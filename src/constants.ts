@@ -172,7 +172,6 @@ export const cfgDefaultDunePath = duneCmd;
 
 /**
  * Return the configuration value for `testDirectories`.
- *
  * @param config The configuration object to use.
  * @returns The configuration value for `testDirectories`.
  */
@@ -182,7 +181,6 @@ export function getCfgTestDirs(config: vscode.WorkspaceConfiguration) {
 
 /**
  * Return the configuration value for `dunePath`.
- *
  * @param config The configuration object to use.
  * @returns The configuration value for `dunePath`.
  */
