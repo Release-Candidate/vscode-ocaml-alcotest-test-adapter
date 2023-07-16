@@ -191,7 +191,6 @@ export function getSourceRange(
 
 /**
  * Return the first location of `s` in `text`, as `Range`.
- *
  * @param r The regex to match.
  * @param text The text to search the string in.
  * @returns The first position of `r` in `text`.

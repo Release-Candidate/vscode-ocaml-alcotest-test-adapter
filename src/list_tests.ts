@@ -133,6 +133,8 @@ async function setOpamEnv(env: h.Env, root: vscode.WorkspaceFolder) {
  * the test runs.
  * @param data.workspaceItem The parent node of the workspace's test tree in the
  * Test Explorer.
+ * @returns  The list of `TestItems` that have been deleted from the Test
+ * Explorer tree.
  */
 async function addNormalTests(
     env: h.Env,
@@ -141,7 +143,7 @@ async function addNormalTests(
         token: vscode.CancellationToken | undefined;
         workspaceItem: vscode.TestItem;
     }
-) {
+): Promise<vscode.TestItem[]> {
     const testDirs = await io.filterExistingDirs(
         data.root,
         c.getCfgTestDirs(env.config)
@@ -175,7 +177,8 @@ async function addNormalTests(
  * @param data.token The `CancellationToken`. Whether the user wants to cancel
  * the test runs.
  * @param data.workspaceItem The parent of the test tree in the Test Explorer
- * view. @returns The list of `TestItems` that have been deleted from the Test
+ * view.
+ * @returns The list of `TestItems` that have been deleted from the Test
  * Explorer tree.
  */
 async function addInlineTests(
@@ -185,7 +188,7 @@ async function addInlineTests(
         token: vscode.CancellationToken | undefined;
         workspaceItem: vscode.TestItem;
     }
-) {
+): Promise<vscode.TestItem[]> {
     const inlineRunnerPaths = await io.findFilesRelative(
         data.root,
         c.runnerExeGlob

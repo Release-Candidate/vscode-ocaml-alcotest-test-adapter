@@ -83,12 +83,14 @@ function setTestsStarted(
  * @param token The `CancellationToken`. Whether the user wants to cancel the
  * test runs.
  * @param request The run request containing the list of tests to run.
+ * @returns The list of `TestItems` that have been deleted from the Test
+ * Explorer tree.
  */
 async function checkForNewTests(
     env: h.Env,
     token: vscode.CancellationToken,
     request: vscode.TestRunRequest
-) {
+): Promise<vscode.TestItem[]> {
     const workspaces: vscode.WorkspaceFolder[] = [];
     if (request.include) {
         workspaces.push(...h.testItemsToWorkspaces(request.include));
