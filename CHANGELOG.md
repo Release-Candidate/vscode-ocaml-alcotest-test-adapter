@@ -1,5 +1,9 @@
 # OCaml Alcotest Test Explorer for Visual Studio Code Changelog
 
+## Version 0.8.1 (2023-07-17)
+
+This version is made to get the Extension published at Open VSX, the last version is somehow stuck.
+
 ## Version 0.8.0 (2023-07-16)
 
 - use newer versions of dependencies.
