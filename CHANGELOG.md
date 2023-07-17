@@ -1,5 +1,11 @@
 # OCaml Alcotest Test Explorer for Visual Studio Code Changelog
 
+## Version 0.8.2 (2023-07-17)
+
+### Bugfixes
+
+- fix the size of the extension by not including the `.yarn` directory.
+
 ## Version 0.8.1 (2023-07-17)
 
 This version is made to get the Extension published at Open VSX, the last version is somehow stuck.
