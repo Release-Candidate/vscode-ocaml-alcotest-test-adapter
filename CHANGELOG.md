@@ -1,5 +1,11 @@
 # OCaml Alcotest Test Explorer for Visual Studio Code Changelog
 
+## Version 0.8.3 (2023-07-17)
+
+### Bugfixes
+
+- make the package smaller by not including GIFs.
+
 ## Version 0.8.2 (2023-07-17)
 
 ### Bugfixes
