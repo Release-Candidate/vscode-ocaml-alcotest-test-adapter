@@ -1,6 +1,6 @@
 # OCaml Alcotest Test Explorer for Visual Studio Code Changelog
 
-## Version 0.8.3 (2023-07-17)
+## Version 0.8.3 (2023-07-22)
 
 ### Bugfixes
 
