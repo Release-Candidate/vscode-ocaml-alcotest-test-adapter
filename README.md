@@ -1,3 +1,8 @@
+> [!WARNING]
+> As I use neither OCaml nor VS Code any more, I will not add any new features to this extension.
+> Feel free to fork it for yourself.
+> I would also change ownership if you would like to be the official maintainer of this extension.
+
 # OCaml Alcotest Test Explorer for Visual Studio Code
 
 [![Tests](https://github.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter/actions/workflows/test.yml/badge.svg)](https://github.com/Release-Candidate/vscode-ocaml-alcotest-test-adapter/actions/workflows/test.yml)
